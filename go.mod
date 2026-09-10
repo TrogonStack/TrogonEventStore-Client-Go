@@ -1,4 +1,4 @@
-module github.com/kurrent-io/KurrentDB-Client-Go
+module github.com/TrogonStack/TrogonEventStore-Client-Go
 
 go 1.24.0
 

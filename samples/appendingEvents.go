@@ -3,13 +3,11 @@ package samples
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log"
-	"slices"
 
 	"github.com/google/uuid"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
 
 type TestEvent struct {
@@ -17,7 +15,7 @@ type TestEvent struct {
 	ImportantData string
 }
 
-func AppendToStream(db *kurrentdb.Client) {
+func AppendToStream(db *trogoneventstore.Client) {
 	// region append-to-stream
 	data := TestEvent{
 		Id:            "1",
@@ -29,12 +27,12 @@ func AppendToStream(db *kurrentdb.Client) {
 		panic(err)
 	}
 
-	options := kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	options := trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}
 
-	result, err := db.AppendToStream(context.Background(), "some-stream", options, kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	result, err := db.AppendToStream(context.Background(), "some-stream", options, trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "some-event",
 		Data:        bytes,
 	})
@@ -43,7 +41,7 @@ func AppendToStream(db *kurrentdb.Client) {
 	log.Printf("Result: %v", result)
 }
 
-func AppendWithSameId(db *kurrentdb.Client) {
+func AppendWithSameId(db *trogoneventstore.Client) {
 	// region append-duplicate-event
 	data := TestEvent{
 		Id:            "1",
@@ -56,21 +54,21 @@ func AppendWithSameId(db *kurrentdb.Client) {
 	}
 
 	id := uuid.New()
-	event := kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	event := trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "some-event",
 		EventID:     id,
 		Data:        bytes,
 	}
 
-	_, err = db.AppendToStream(context.Background(), "some-stream", kurrentdb.AppendToStreamOptions{}, event)
+	_, err = db.AppendToStream(context.Background(), "some-stream", trogoneventstore.AppendToStreamOptions{}, event)
 
 	if err != nil {
 		panic(err)
 	}
 
 	// attempt to append the same event again
-	_, err = db.AppendToStream(context.Background(), "some-stream", kurrentdb.AppendToStreamOptions{}, event)
+	_, err = db.AppendToStream(context.Background(), "some-stream", trogoneventstore.AppendToStreamOptions{}, event)
 
 	if err != nil {
 		panic(err)
@@ -79,7 +77,7 @@ func AppendWithSameId(db *kurrentdb.Client) {
 	// endregion append-duplicate-event
 }
 
-func AppendWithNoStream(db *kurrentdb.Client) {
+func AppendWithNoStream(db *trogoneventstore.Client) {
 	// region append-with-no-stream
 	data := TestEvent{
 		Id:            "1",
@@ -91,12 +89,12 @@ func AppendWithNoStream(db *kurrentdb.Client) {
 		panic(err)
 	}
 
-	options := kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	options := trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}
 
-	_, err = db.AppendToStream(context.Background(), "same-event-stream", options, kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	_, err = db.AppendToStream(context.Background(), "same-event-stream", options, trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "some-event",
 		Data:        bytes,
 	})
@@ -114,19 +112,19 @@ func AppendWithNoStream(db *kurrentdb.Client) {
 	}
 
 	// attempt to append the same event again
-	_, err = db.AppendToStream(context.Background(), "same-event-stream", options, kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	_, err = db.AppendToStream(context.Background(), "same-event-stream", options, trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "some-event",
 		Data:        bytes,
 	})
 	// endregion append-with-no-stream
 }
 
-func AppendWithConcurrencyCheck(db *kurrentdb.Client) {
+func AppendWithConcurrencyCheck(db *trogoneventstore.Client) {
 	// region append-with-concurrency-check
-	ropts := kurrentdb.ReadStreamOptions{
-		Direction: kurrentdb.Backwards,
-		From:      kurrentdb.End{},
+	ropts := trogoneventstore.ReadStreamOptions{
+		Direction: trogoneventstore.Backwards,
+		From:      trogoneventstore.End{},
 	}
 
 	stream, err := db.ReadStream(context.Background(), "concurrency-stream", ropts, 1)
@@ -153,12 +151,12 @@ func AppendWithConcurrencyCheck(db *kurrentdb.Client) {
 		panic(err)
 	}
 
-	aopts := kurrentdb.AppendToStreamOptions{
+	aopts := trogoneventstore.AppendToStreamOptions{
 		StreamState: lastEvent.OriginalStreamRevision(),
 	}
 
-	_, err = db.AppendToStream(context.Background(), "concurrency-stream", aopts, kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	_, err = db.AppendToStream(context.Background(), "concurrency-stream", aopts, trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "some-event",
 		Data:        bytes,
 	})
@@ -172,15 +170,15 @@ func AppendWithConcurrencyCheck(db *kurrentdb.Client) {
 		panic(err)
 	}
 
-	_, err = db.AppendToStream(context.Background(), "concurrency-stream", aopts, kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	_, err = db.AppendToStream(context.Background(), "concurrency-stream", aopts, trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "some-event",
 		Data:        bytes,
 	})
 	// endregion append-with-concurrency-check
 }
 
-func AppendToStreamOverridingUserCredentials(db *kurrentdb.Client) {
+func AppendToStreamOverridingUserCredentials(db *trogoneventstore.Client) {
 	data := TestEvent{
 		Id:            "1",
 		ImportantData: "some value",
@@ -191,129 +189,17 @@ func AppendToStreamOverridingUserCredentials(db *kurrentdb.Client) {
 		panic(err)
 	}
 
-	event := kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	event := trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "some-event",
 		Data:        bytes,
 	}
 
 	// region overriding-user-credentials
-	credentials := &kurrentdb.Credentials{Login: "admin", Password: "changeit"}
+	credentials := &trogoneventstore.Credentials{Login: "admin", Password: "changeit"}
 
-	result, err := db.AppendToStream(context.Background(), "some-stream", kurrentdb.AppendToStreamOptions{Authenticated: credentials}, event)
+	result, err := db.AppendToStream(context.Background(), "some-stream", trogoneventstore.AppendToStreamOptions{Authenticated: credentials}, event)
 	// endregion overriding-user-credentials
-
-	log.Printf("Result: %v", result)
-}
-
-func AppendToMultipleStreams(db *kurrentdb.Client) {
-	type OrderCreated struct {
-		OrderId string  `json:"orderId"`
-		Amount  float64 `json:"amount"`
-	}
-
-	type PaymentProcessed struct {
-		PaymentId string  `json:"paymentId"`
-		Amount    float64 `json:"amount"`
-		Method    string  `json:"method"`
-	}
-
-	metadata := map[string]interface{}{
-		"source": "web-store",
-	}
-	metadataBytes, _ := json.Marshal(metadata)
-
-	orderData, _ := json.Marshal(OrderCreated{OrderId: "12345", Amount: 99.99})
-	paymentData, _ := json.Marshal(PaymentProcessed{PaymentId: "PAY-789", Amount: 99.99, Method: "credit_card"})
-
-	requests := []kurrentdb.AppendStreamRequest{
-		{
-			StreamName: "order-stream-1",
-			Events: slices.Values([]kurrentdb.EventData{{
-				EventID:     uuid.New(),
-				EventType:   "OrderCreated",
-				ContentType: kurrentdb.ContentTypeJson,
-				Data:        orderData,
-				Metadata:    metadataBytes,
-			}}),
-			ExpectedStreamState: kurrentdb.Any{},
-		},
-		{
-			StreamName: "payment-stream-1",
-			Events: slices.Values([]kurrentdb.EventData{{
-				EventID:     uuid.New(),
-				EventType:   "PaymentProcessed",
-				ContentType: kurrentdb.ContentTypeJson,
-				Data:        paymentData,
-				Metadata:    metadataBytes,
-			}}),
-			ExpectedStreamState: kurrentdb.Any{},
-		},
-	}
-
-	_, err := db.MultiStreamAppend(context.Background(), slices.Values(requests))
-	if err != nil {
-		var streamRevisionConflictErr *kurrentdb.StreamRevisionConflictError
-		if errors.As(err, &streamRevisionConflictErr) {
-			log.Printf("Stream revision conflict on stream %s: expected %v but was %v", streamRevisionConflictErr.Stream, streamRevisionConflictErr.ExpectedRevision, streamRevisionConflictErr.ActualRevision)
-		}
-	}
-}
-
-func AppendRecords(db *kurrentdb.Client) {
-	// region append-records
-	type OrderCreated struct {
-		OrderId string  `json:"orderId"`
-		Amount  float64 `json:"amount"`
-	}
-
-	type InventoryReserved struct {
-		OrderId string `json:"orderId"`
-		Sku     string `json:"sku"`
-	}
-
-	orderData, _ := json.Marshal(OrderCreated{OrderId: "12345", Amount: 99.99})
-	inventoryData, _ := json.Marshal(InventoryReserved{OrderId: "12345", Sku: "ITEM-001"})
-
-	// Records can be interleaved across streams
-	records := []kurrentdb.AppendRecord{
-		{
-			Stream: "order-123",
-			Record: kurrentdb.EventData{
-				EventID:     uuid.New(),
-				EventType:   "OrderCreated",
-				ContentType: kurrentdb.ContentTypeJson,
-				Data:        orderData,
-			},
-		},
-		{
-			Stream: "inventory-ITEM-001",
-			Record: kurrentdb.EventData{
-				EventID:     uuid.New(),
-				EventType:   "InventoryReserved",
-				ContentType: kurrentdb.ContentTypeJson,
-				Data:        inventoryData,
-			},
-		},
-	}
-
-	// Consistency checks are optional variadic arguments
-	result, err := db.AppendRecords(context.Background(), records,
-		kurrentdb.StreamStateCheck{
-			Stream:        "order-123",
-			ExpectedState: kurrentdb.NoStream{},
-		},
-	)
-	if err != nil {
-		var violationErr *kurrentdb.AppendConsistencyViolationError
-		if errors.As(err, &violationErr) {
-			for _, v := range violationErr.Violations {
-				log.Printf("Check %d violated on stream %s: expected %v but was %v",
-					v.CheckIndex, v.Stream, v.ExpectedState, v.ActualState)
-			}
-		}
-	}
-	// endregion append-records
 
 	log.Printf("Result: %v", result)
 }

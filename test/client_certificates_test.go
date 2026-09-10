@@ -10,7 +10,7 @@ package test
 //	"testing"
 //
 //	"github.com/google/uuid"
-//	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+//	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 //	"github.com/stretchr/testify/assert"
 //	"github.com/stretchr/testify/require"
 //)
@@ -23,12 +23,12 @@ package test
 //		userCertFile := "../certs/user-admin/user-admin.crt"
 //		userKeyFile := "../certs/user-admin/user-admin.key"
 //
-//		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&userCertFile=%s&userKeyFile=%s", endpoint, tlsCaFile, userCertFile, userKeyFile))
+//		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&userCertFile=%s&userKeyFile=%s", endpoint, tlsCaFile, userCertFile, userKeyFile))
 //		if err != nil {
 //			t.Fatalf("Unexpected configuration error: %s", err.Error())
 //		}
 //
-//		c, err := kurrentdb.NewClient(config)
+//		c, err := trogoneventstore.NewClient(config)
 //		if err != nil {
 //			t.Fatalf("Unexpected error: %s", err.Error())
 //		}
@@ -36,9 +36,9 @@ package test
 //
 //		numberOfEventsToRead := 1
 //		numberOfEvents := uint64(numberOfEventsToRead)
-//		opts := kurrentdb.ReadAllOptions{
-//			From:           kurrentdb.Start{},
-//			Direction:      kurrentdb.Backwards,
+//		opts := trogoneventstore.ReadAllOptions{
+//			From:           trogoneventstore.Start{},
+//			Direction:      trogoneventstore.Backwards,
 //			ResolveLinkTos: true,
 //		}
 //
@@ -66,12 +66,12 @@ package test
 //			t.Fatalf("Unexpected error: %s", err.Error())
 //		}
 //
-//		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&usercertfile=%s&userkeyfile=%s", endpoint, tlsCaFile, userCertFile, userKeyFile))
+//		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&usercertfile=%s&userkeyfile=%s", endpoint, tlsCaFile, userCertFile, userKeyFile))
 //		if err != nil {
 //			t.Fatalf("Unexpected configuration error: %s", err.Error())
 //		}
 //
-//		c, err := kurrentdb.NewClient(config)
+//		c, err := trogoneventstore.NewClient(config)
 //		if err != nil {
 //			t.Fatalf("Unexpected error: %s", err.Error())
 //		}
@@ -79,9 +79,9 @@ package test
 //
 //		numberOfEventsToRead := 1
 //		numberOfEvents := uint64(numberOfEventsToRead)
-//		opts := kurrentdb.ReadAllOptions{
-//			From:           kurrentdb.Start{},
-//			Direction:      kurrentdb.Backwards,
+//		opts := trogoneventstore.ReadAllOptions{
+//			From:           trogoneventstore.Start{},
+//			Direction:      trogoneventstore.Backwards,
 //			ResolveLinkTos: true,
 //		}
 //
@@ -98,12 +98,12 @@ package test
 //		userCertFile := "../certs/user-invalid/user-invalid.crt"
 //		userKeyFile := "../certs/user-invalid/user-invalid.key"
 //
-//		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&usercertfile=%s&userkeyfile=%s", endpoint, tlsCaFile, userCertFile, userKeyFile))
+//		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&usercertfile=%s&userkeyfile=%s", endpoint, tlsCaFile, userCertFile, userKeyFile))
 //		if err != nil {
 //			t.Fatalf("Unexpected configuration error: %s", err.Error())
 //		}
 //
-//		c, err := kurrentdb.NewClient(config)
+//		c, err := trogoneventstore.NewClient(config)
 //		if err != nil {
 //			t.Fatalf("Unexpected error: %s", err.Error())
 //		}
@@ -112,8 +112,8 @@ package test
 //		testEvent := fixture.CreateTestEvent()
 //
 //		streamID := uuid.NewString()
-//		opts := kurrentdb.AppendToStreamOptions{
-//			StreamState: kurrentdb.Any{},
+//		opts := trogoneventstore.AppendToStreamOptions{
+//			StreamState: trogoneventstore.Any{},
 //		}
 //
 //		result, err := c.AppendToStream(context.Background(), streamID, opts, testEvent)
@@ -126,12 +126,12 @@ package test
 //		tlsCaFile := "../certs/ca/ca.crt"
 //		userCertFile := "../certs/user-admin/user-admin.crt"
 //
-//		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&usercertfile=%s", endpoint, tlsCaFile, userCertFile))
+//		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlscafile=%s&usercertfile=%s", endpoint, tlsCaFile, userCertFile))
 //
-//		_, err = kurrentdb.NewClient(config)
-//		kurrentDbError, ok := kurrentdb.FromError(err)
+//		_, err = trogoneventstore.NewClient(config)
+//		serverError, ok := trogoneventstore.FromError(err)
 //		require.False(t, ok)
-//		require.NotNil(t, kurrentDbError)
-//		assert.Contains(t, kurrentDbError.Error(), "both userCertFile and userKeyFile must be provided")
+//		require.NotNil(t, serverError)
+//		assert.Contains(t, serverError.Error(), "both userCertFile and userKeyFile must be provided")
 //	})
 //}

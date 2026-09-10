@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
 
 func TestSubscriptionSuite(t *testing.T) {
@@ -43,8 +43,8 @@ func (s *SubscriptionTestSuite) TestStreamSubscriptionDeliversAllEventsInStreamA
 	var appendedEvents sync.WaitGroup
 
 	// Act & Assert
-	subscription, err := client.SubscribeToStream(context.Background(), streamId, kurrentdb.SubscribeToStreamOptions{
-		From: kurrentdb.Start{},
+	subscription, err := client.SubscribeToStream(context.Background(), streamId, trogoneventstore.SubscribeToStreamOptions{
+		From: trogoneventstore.Start{},
 	})
 
 	s.NoError(err)
@@ -80,8 +80,8 @@ func (s *SubscriptionTestSuite) TestStreamSubscriptionDeliversAllEventsInStreamA
 	s.False(timedOut, "Timed out waiting for initial set of events")
 
 	// Write a new event
-	opts2 := kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.Revision(9),
+	opts2 := trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.Revision(9),
 	}
 	writeResult, err := client.AppendToStream(context.Background(), streamId, opts2, appendEvent)
 	s.NoError(err)
@@ -107,15 +107,15 @@ func (s *SubscriptionTestSuite) TestAllSubscriptionWithFilterDeliversCorrectEven
 	for i := 0; i < 10; i++ {
 		event := fixture.CreateTestEvent()
 		event.EventType = prefix + event.EventType
-		_, err := client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{}, event)
+		_, err := client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{}, event)
 		s.NoError(err)
 	}
 
 	// Act
-	subscription, err := client.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		From: kurrentdb.Start{},
-		Filter: &kurrentdb.SubscriptionFilter{
-			Type:     kurrentdb.EventFilterType,
+	subscription, err := client.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		From: trogoneventstore.Start{},
+		Filter: &trogoneventstore.SubscriptionFilter{
+			Type:     trogoneventstore.EventFilterType,
 			Prefixes: []string{prefix},
 		},
 	})
@@ -153,9 +153,9 @@ func (s *SubscriptionTestSuite) TestSubscribeToAllFilter() {
 	fixture := s.fixture
 	client := fixture.Client()
 
-	sub, err := client.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		From:   kurrentdb.Start{},
-		Filter: kurrentdb.ExcludeSystemEventsFilter(),
+	sub, err := client.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		From:   trogoneventstore.Start{},
+		Filter: trogoneventstore.ExcludeSystemEventsFilter(),
 	})
 
 	s.NoError(err)
@@ -192,8 +192,8 @@ func (s *SubscriptionTestSuite) TestConnectionClosing() {
 	streamId := fixture.NewStreamId()
 	fixture.CreateTestEvents(streamId, 20)
 
-	subscription, err := client.SubscribeToStream(context.Background(), streamId, kurrentdb.SubscribeToStreamOptions{
-		From: kurrentdb.Start{},
+	subscription, err := client.SubscribeToStream(context.Background(), streamId, trogoneventstore.SubscribeToStreamOptions{
+		From: trogoneventstore.Start{},
 	})
 	s.NoError(err)
 
@@ -230,13 +230,13 @@ func (s *SubscriptionTestSuite) TestSubscriptionToAllWithCredentialsOverride() {
 	fixture := s.fixture
 	client := fixture.Client()
 
-	opts := kurrentdb.SubscribeToAllOptions{
-		Authenticated: &kurrentdb.Credentials{
+	opts := trogoneventstore.SubscribeToAllOptions{
+		Authenticated: &trogoneventstore.Credentials{
 			Login:    "admin",
 			Password: "changeit",
 		},
-		From:   kurrentdb.Start{},
-		Filter: kurrentdb.ExcludeSystemEventsFilter(),
+		From:   trogoneventstore.Start{},
+		Filter: trogoneventstore.ExcludeSystemEventsFilter(),
 	}
 	_, err := client.SubscribeToAll(context.Background(), opts)
 
@@ -251,11 +251,11 @@ func (s *SubscriptionTestSuite) TestSubscriptionToStreamCaughtUp() {
 	const expectedEventCount = 10
 	const testTimeout = 1 * time.Minute
 
-	kurrentDbVersion, err := client.GetServerVersion()
+	serverVersion, err := client.GetServerVersion()
 	s.NoError(err, "Error getting server version")
 
-	if kurrentDbVersion.Major < minSupportedVersion {
-		s.T().Skip("CaughtUp message is not supported in this version of KurrentDB")
+	if serverVersion.Major < minSupportedVersion {
+		s.T().Skip("CaughtUp message is not supported in this version of TrogonEventStore")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -264,7 +264,7 @@ func (s *SubscriptionTestSuite) TestSubscriptionToStreamCaughtUp() {
 	streamId := fixture.NewStreamId()
 	fixture.CreateTestEvents(streamId, 10)
 
-	subscription, err := client.SubscribeToStream(ctx, streamId, kurrentdb.SubscribeToStreamOptions{From: kurrentdb.Start{}})
+	subscription, err := client.SubscribeToStream(ctx, streamId, trogoneventstore.SubscribeToStreamOptions{From: trogoneventstore.Start{}})
 	s.NoError(err)
 	defer subscription.Close()
 

@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
 
-func ExcludeSystemEvents(db *kurrentdb.Client) {
+func ExcludeSystemEvents(db *trogoneventstore.Client) {
 	// region exclude-system
-	sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		Filter: kurrentdb.ExcludeSystemEventsFilter(),
+	sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		Filter: trogoneventstore.ExcludeSystemEventsFilter(),
 	})
 
 	if err != nil {
@@ -37,11 +37,11 @@ func ExcludeSystemEvents(db *kurrentdb.Client) {
 	// endregion exclude-system
 }
 
-func EventTypePrefix(db *kurrentdb.Client) {
+func EventTypePrefix(db *trogoneventstore.Client) {
 	// region event-type-prefix
-	sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		Filter: &kurrentdb.SubscriptionFilter{
-			Type:     kurrentdb.EventFilterType,
+	sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		Filter: &trogoneventstore.SubscriptionFilter{
+			Type:     trogoneventstore.EventFilterType,
 			Prefixes: []string{"customer-"},
 		},
 	})
@@ -70,11 +70,11 @@ func EventTypePrefix(db *kurrentdb.Client) {
 	// endregion event-type-prefix
 }
 
-func EventTypeRegex(db *kurrentdb.Client) {
+func EventTypeRegex(db *trogoneventstore.Client) {
 	// region event-type-regex
-	sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		Filter: &kurrentdb.SubscriptionFilter{
-			Type:  kurrentdb.EventFilterType,
+	sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		Filter: &trogoneventstore.SubscriptionFilter{
+			Type:  trogoneventstore.EventFilterType,
 			Regex: "^user|^company",
 		},
 	})
@@ -103,11 +103,11 @@ func EventTypeRegex(db *kurrentdb.Client) {
 	// endregion event-type-regex
 }
 
-func StreamPrefix(db *kurrentdb.Client) {
+func StreamPrefix(db *trogoneventstore.Client) {
 	// region stream-prefix
-	sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		Filter: &kurrentdb.SubscriptionFilter{
-			Type:     kurrentdb.StreamFilterType,
+	sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		Filter: &trogoneventstore.SubscriptionFilter{
+			Type:     trogoneventstore.StreamFilterType,
 			Prefixes: []string{"user-"},
 		},
 	})
@@ -136,11 +136,11 @@ func StreamPrefix(db *kurrentdb.Client) {
 	// endregion stream-prefix
 }
 
-func StreamRegex(db *kurrentdb.Client) {
+func StreamRegex(db *trogoneventstore.Client) {
 	// region stream-regex
-	sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		Filter: &kurrentdb.SubscriptionFilter{
-			Type:  kurrentdb.StreamFilterType,
+	sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		Filter: &trogoneventstore.SubscriptionFilter{
+			Type:  trogoneventstore.StreamFilterType,
 			Regex: "^user|^company",
 		},
 	})
@@ -169,11 +169,11 @@ func StreamRegex(db *kurrentdb.Client) {
 	// endregion stream-regex
 }
 
-func CheckpointCallbackWithInterval(db *kurrentdb.Client) {
+func CheckpointCallbackWithInterval(db *trogoneventstore.Client) {
 	// region checkpoint-with-interval
-	sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-		Filter: &kurrentdb.SubscriptionFilter{
-			Type:  kurrentdb.EventFilterType,
+	sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+		Filter: &trogoneventstore.SubscriptionFilter{
+			Type:  trogoneventstore.EventFilterType,
 			Regex: "/^[^\\$].*/",
 		},
 	})

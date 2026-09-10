@@ -34,7 +34,7 @@ stream, which includes all events.
 ### Subscribing to a Specific Stream
 
 ```go
-err := client.CreatePersistentSubscription(context.Background(), "order-123", "subscription-group", kurrentdb.PersistentStreamSubscriptionOptions{})
+err := client.CreatePersistentSubscription(context.Background(), "order-123", "subscription-group", trogoneventstore.PersistentStreamSubscriptionOptions{})
 
 if err != nil {
     panic(err)
@@ -44,9 +44,9 @@ if err != nil {
 ### Subscribing to `$all`
 
 ```go
-options := kurrentdb.PersistentAllSubscriptionOptions{
-    Filter: &kurrentdb.SubscriptionFilter{
-        Type:     kurrentdb.StreamFilterType,
+options := trogoneventstore.PersistentAllSubscriptionOptions{
+    Filter: &trogoneventstore.SubscriptionFilter{
+        Type:     trogoneventstore.StreamFilterType,
         Prefixes: []string{"test"},
     },
 }
@@ -59,7 +59,7 @@ if err != nil {
 ```
 
 ::: note
-As from EventStoreDB 21.10, the ability to subscribe to `$all` supports
+Subscriptions to `$all` support
 [server-side filtering](subscriptions.md#server-side-filtering). You can create
 a subscription group for `$all` similarly to how you would for a specific
 stream:
@@ -83,7 +83,7 @@ speed of your processing.
 The code below shows how to connect to an existing subscription group for a specific stream:
 
 ```go
-sub, err := client.SubscribeToPersistentSubscription(context.Background(), "order-123", "subscription-group", kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+sub, err := client.SubscribeToPersistentSubscription(context.Background(), "order-123", "subscription-group", trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 
 if err != nil {
     panic(err)
@@ -107,7 +107,7 @@ for {
 The code below shows how to connect to an existing subscription group for `$all`:
 
 ```go
-sub, err := client.SubscribeToPersistentSubscriptionToAll(context.Background(), "subscription-group", kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+sub, err := client.SubscribeToPersistentSubscriptionToAll(context.Background(), "subscription-group", trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 
 if err != nil {
     panic(err)
@@ -138,7 +138,7 @@ reason, then you can Nack (not acknowledge) the message and tell the server how
 to handle the failure.
 
 ```go{11}
-sub, err := client.SubscribeToPersistentSubscription(context.Background(), "order-123", "subscription-group", kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+sub, err := client.SubscribeToPersistentSubscription(context.Background(), "order-123", "subscription-group", trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 
 if err != nil {
     panic(err)
@@ -193,7 +193,7 @@ resources.
 
 For use with an indexing projection such as the system `$by_category` projection.
 
-KurrentDB inspects the event for its source stream id, hashing the id to one
+TrogonEventStore inspects the event for its source stream id, hashing the id to one
 of 1024 buckets assigned to individual clients. When a client disconnects, its
 buckets are assigned to other clients. When a client connects, it is assigned
 some existing buckets. This naively attempts to maintain a balanced workload.

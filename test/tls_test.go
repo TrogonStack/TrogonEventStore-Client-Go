@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,12 +19,12 @@ import (
 
 func TestTLS(t *testing.T) {
 	t.Run("Default", func(t *testing.T) {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s", "localhost:2111,localhost:2112,localhost:2113"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s", "localhost:2111,localhost:2112,localhost:2113"))
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -32,9 +32,9 @@ func TestTLS(t *testing.T) {
 
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 
@@ -44,7 +44,7 @@ func TestTLS(t *testing.T) {
 	})
 
 	t.Run("DefaultsWithCertificate", func(t *testing.T) {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s", "localhost:2111,localhost:2112,localhost:2113"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s", "localhost:2111,localhost:2112,localhost:2113"))
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
@@ -59,7 +59,7 @@ func TestTLS(t *testing.T) {
 		}
 		config.RootCAs = cp
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -68,9 +68,9 @@ func TestTLS(t *testing.T) {
 
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 		stream, err := c.ReadAll(context.Background(), opts, numberOfEvents)
@@ -82,12 +82,12 @@ func TestTLS(t *testing.T) {
 	})
 
 	t.Run("WithoutCertificateAndVerify", func(t *testing.T) {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=false", "localhost:2111,localhost:2112,localhost:2113"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=false", "localhost:2111,localhost:2112,localhost:2113"))
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -96,9 +96,9 @@ func TestTLS(t *testing.T) {
 
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 		stream, err := c.ReadAll(context.Background(), opts, numberOfEvents)
@@ -111,12 +111,12 @@ func TestTLS(t *testing.T) {
 	})
 
 	t.Run("testTLSWithoutCertificate", func(t *testing.T) {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true", "localhost:2111,localhost:2112,localhost:2113"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true", "localhost:2111,localhost:2112,localhost:2113"))
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -125,9 +125,9 @@ func TestTLS(t *testing.T) {
 
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 		_, err = c.ReadAll(context.Background(), opts, numberOfEvents)
@@ -136,7 +136,7 @@ func TestTLS(t *testing.T) {
 	})
 
 	t.Run("WithCertificate", func(t *testing.T) {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true", "localhost:2111,localhost:2112,localhost:2113"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true", "localhost:2111,localhost:2112,localhost:2113"))
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
@@ -151,7 +151,7 @@ func TestTLS(t *testing.T) {
 		}
 		config.RootCAs = cp
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -160,9 +160,9 @@ func TestTLS(t *testing.T) {
 
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 		stream, err := c.ReadAll(context.Background(), opts, numberOfEvents)
@@ -180,12 +180,12 @@ func TestTLS(t *testing.T) {
 		}
 
 		s := fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true&tlsCAFile=%s", "localhost:2111,localhost:2112,localhost:2113", absPath)
-		config, err := kurrentdb.ParseConnectionString(s)
+		config, err := trogoneventstore.ParseConnectionString(s)
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -194,9 +194,9 @@ func TestTLS(t *testing.T) {
 
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 		stream, err := c.ReadAll(context.Background(), opts, numberOfEvents)
@@ -209,12 +209,12 @@ func TestTLS(t *testing.T) {
 	})
 
 	t.Run("WithCertificateFromRelativeFile", func(t *testing.T) {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true&tlsCAFile=../certs/ca/ca.crt", "localhost:2111,localhost:2112,localhost:2113"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true&tlsCAFile=../certs/ca/ca.crt", "localhost:2111,localhost:2112,localhost:2113"))
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -224,9 +224,9 @@ func TestTLS(t *testing.T) {
 		WaitForAdminToBeAvailable(t, c)
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 		stream, err := c.ReadAll(context.Background(), opts, numberOfEvents)
@@ -238,7 +238,7 @@ func TestTLS(t *testing.T) {
 	})
 
 	t.Run("WithInvalidCertificate", func(t *testing.T) {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true", "localhost:2111,localhost:2112,localhost:2113"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@%s?tls=true&tlsverifycert=true", "localhost:2111,localhost:2112,localhost:2113"))
 		if err != nil {
 			t.Fatalf("Unexpected configuration error: %s", err.Error())
 		}
@@ -253,7 +253,7 @@ func TestTLS(t *testing.T) {
 		}
 		config.RootCAs = cp
 
-		c, err := kurrentdb.NewClient(config)
+		c, err := trogoneventstore.NewClient(config)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err.Error())
 		}
@@ -262,25 +262,25 @@ func TestTLS(t *testing.T) {
 
 		numberOfEventsToRead := 1
 		numberOfEvents := uint64(numberOfEventsToRead)
-		opts := kurrentdb.ReadAllOptions{
-			From:           kurrentdb.Start{},
-			Direction:      kurrentdb.Backwards,
+		opts := trogoneventstore.ReadAllOptions{
+			From:           trogoneventstore.Start{},
+			Direction:      trogoneventstore.Backwards,
 			ResolveLinkTos: true,
 		}
 		_, err = c.ReadAll(context.Background(), opts, numberOfEvents)
-		esdbErr, ok := kurrentdb.FromError(err)
+		esdbErr, ok := trogoneventstore.FromError(err)
 		require.False(t, ok)
 		require.NotNil(t, esdbErr)
 		assert.Contains(t, esdbErr.Error(), "certificate signed by unknown authority")
 	})
 }
 
-func WaitForAdminToBeAvailable(t *testing.T, db *kurrentdb.Client) {
+func WaitForAdminToBeAvailable(t *testing.T, db *trogoneventstore.Client) {
 	for count := 0; count < 50; count++ {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		t.Logf("[debug] checking if admin user is available...%v/50", count)
 
-		stream, err := db.ReadStream(ctx, "$users", kurrentdb.ReadStreamOptions{}, 1)
+		stream, err := db.ReadStream(ctx, "$users", trogoneventstore.ReadStreamOptions{}, 1)
 
 		if ctx.Err() != nil {
 			t.Log("[debug] request timed out, retrying...")
@@ -300,11 +300,11 @@ func WaitForAdminToBeAvailable(t *testing.T, db *kurrentdb.Client) {
 		}
 
 		if err != nil {
-			if esdbError, ok := kurrentdb.FromError(err); !ok {
-				if esdbError.Code() == kurrentdb.ErrorCodeResourceNotFound ||
-					esdbError.Code() == kurrentdb.ErrorCodeUnauthenticated ||
-					esdbError.Code() == kurrentdb.ErrorCodeDeadlineExceeded ||
-					esdbError.Code() == kurrentdb.ErrorUnavailable {
+			if esdbError, ok := trogoneventstore.FromError(err); !ok {
+				if esdbError.Code() == trogoneventstore.ErrorCodeResourceNotFound ||
+					esdbError.Code() == trogoneventstore.ErrorCodeUnauthenticated ||
+					esdbError.Code() == trogoneventstore.ErrorCodeDeadlineExceeded ||
+					esdbError.Code() == trogoneventstore.ErrorUnavailable {
 					time.Sleep(1 * time.Second)
 					t.Logf("[debug] not available retrying...")
 					cancel()

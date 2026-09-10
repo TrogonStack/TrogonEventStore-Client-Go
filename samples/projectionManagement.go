@@ -9,18 +9,18 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
 
 func CreateClient(connectionString string) {
 	// region createClient
-	conf, err := kurrentdb.ParseConnectionString(connectionString)
+	conf, err := trogoneventstore.ParseConnectionString(connectionString)
 
 	if err != nil {
 		panic(err)
 	}
 
-	client, err := kurrentdb.NewProjectionClient(conf)
+	client, err := trogoneventstore.NewProjectionClient(conf)
 
 	if err != nil {
 		panic(err)
@@ -30,9 +30,9 @@ func CreateClient(connectionString string) {
 	defer client.Close()
 }
 
-func Disable(client *kurrentdb.ProjectionClient) {
+func Disable(client *trogoneventstore.ProjectionClient) {
 	// region Disable
-	err := client.Disable(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+	err := client.Disable(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -40,12 +40,12 @@ func Disable(client *kurrentdb.ProjectionClient) {
 	// endregion Disable
 }
 
-func DisableNotFound(client *kurrentdb.ProjectionClient) {
+func DisableNotFound(client *trogoneventstore.ProjectionClient) {
 	// region DisableNotFound
-	err := client.Disable(context.Background(), "projection that doesn't exist", kurrentdb.GenericProjectionOptions{})
+	err := client.Disable(context.Background(), "projection that doesn't exist", trogoneventstore.GenericProjectionOptions{})
 
-	if esdbError, ok := kurrentdb.FromError(err); !ok {
-		if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+	if esdbError, ok := trogoneventstore.FromError(err); !ok {
+		if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
 			log.Printf("projection not found")
 			return
 		}
@@ -53,9 +53,9 @@ func DisableNotFound(client *kurrentdb.ProjectionClient) {
 	// endregion DisableNotFound
 }
 
-func Enable(client *kurrentdb.ProjectionClient) {
+func Enable(client *trogoneventstore.ProjectionClient) {
 	// region Enable
-	err := client.Enable(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+	err := client.Enable(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -63,12 +63,12 @@ func Enable(client *kurrentdb.ProjectionClient) {
 	// endregion Enable
 }
 
-func EnableNotFound(client *kurrentdb.ProjectionClient) {
+func EnableNotFound(client *trogoneventstore.ProjectionClient) {
 	// region EnableNotFound
-	err := client.Enable(context.Background(), "projection that doesn't exist", kurrentdb.GenericProjectionOptions{})
+	err := client.Enable(context.Background(), "projection that doesn't exist", trogoneventstore.GenericProjectionOptions{})
 
-	if esdbError, ok := kurrentdb.FromError(err); !ok {
-		if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+	if esdbError, ok := trogoneventstore.FromError(err); !ok {
+		if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
 			log.Printf("projection not found")
 			return
 		}
@@ -76,9 +76,9 @@ func EnableNotFound(client *kurrentdb.ProjectionClient) {
 	// endregion EnableNotFound
 }
 
-func Delete(client *kurrentdb.ProjectionClient) {
+func Delete(client *trogoneventstore.ProjectionClient) {
 	// region Delete
-	err := client.Delete(context.Background(), "$by_category", kurrentdb.DeleteProjectionOptions{})
+	err := client.Delete(context.Background(), "$by_category", trogoneventstore.DeleteProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -86,12 +86,12 @@ func Delete(client *kurrentdb.ProjectionClient) {
 	// endregion Delete
 }
 
-func DeleteNotFound(client *kurrentdb.ProjectionClient) {
+func DeleteNotFound(client *trogoneventstore.ProjectionClient) {
 	// region DeleteNotFound
-	err := client.Delete(context.Background(), "projection that doesn't exist", kurrentdb.DeleteProjectionOptions{})
+	err := client.Delete(context.Background(), "projection that doesn't exist", trogoneventstore.DeleteProjectionOptions{})
 
-	if esdbError, ok := kurrentdb.FromError(err); !ok {
-		if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+	if esdbError, ok := trogoneventstore.FromError(err); !ok {
+		if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
 			log.Printf("projection not found")
 			return
 		}
@@ -99,9 +99,9 @@ func DeleteNotFound(client *kurrentdb.ProjectionClient) {
 	// endregion DeleteNotFound
 }
 
-func Abort(client *kurrentdb.ProjectionClient) {
+func Abort(client *trogoneventstore.ProjectionClient) {
 	// region Abort
-	err := client.Abort(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+	err := client.Abort(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -109,12 +109,12 @@ func Abort(client *kurrentdb.ProjectionClient) {
 	// endregion Abort
 }
 
-func AbortNotFound(client *kurrentdb.ProjectionClient) {
+func AbortNotFound(client *trogoneventstore.ProjectionClient) {
 	// region Abort_NotFound
-	err := client.Abort(context.Background(), "projection that doesn't exist", kurrentdb.GenericProjectionOptions{})
+	err := client.Abort(context.Background(), "projection that doesn't exist", trogoneventstore.GenericProjectionOptions{})
 
-	if esdbError, ok := kurrentdb.FromError(err); !ok {
-		if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+	if esdbError, ok := trogoneventstore.FromError(err); !ok {
+		if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
 			log.Printf("projection not found")
 			return
 		}
@@ -122,9 +122,9 @@ func AbortNotFound(client *kurrentdb.ProjectionClient) {
 	// endregion Abort_NotFound
 }
 
-func Reset(client *kurrentdb.ProjectionClient) {
+func Reset(client *trogoneventstore.ProjectionClient) {
 	// region Reset
-	err := client.Reset(context.Background(), "$by_category", kurrentdb.ResetProjectionOptions{})
+	err := client.Reset(context.Background(), "$by_category", trogoneventstore.ResetProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -132,12 +132,12 @@ func Reset(client *kurrentdb.ProjectionClient) {
 	// endregion Reset
 }
 
-func ResetNotFound(client *kurrentdb.ProjectionClient) {
+func ResetNotFound(client *trogoneventstore.ProjectionClient) {
 	// region Reset_NotFound
-	err := client.Reset(context.Background(), "projection that doesn't exist", kurrentdb.ResetProjectionOptions{})
+	err := client.Reset(context.Background(), "projection that doesn't exist", trogoneventstore.ResetProjectionOptions{})
 
-	if esdbError, ok := kurrentdb.FromError(err); !ok {
-		if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+	if esdbError, ok := trogoneventstore.FromError(err); !ok {
+		if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
 			log.Printf("projection not found")
 			return
 		}
@@ -145,7 +145,7 @@ func ResetNotFound(client *kurrentdb.ProjectionClient) {
 	// endregion Reset_NotFound
 }
 
-func Create(client *kurrentdb.ProjectionClient) {
+func Create(client *trogoneventstore.ProjectionClient) {
 	// region CreateContinuous
 	script := `
 fromAll()
@@ -165,7 +165,7 @@ fromAll()
 .outputState()
 `
 	name := fmt.Sprintf("countEvent_Create_%s", uuid.New())
-	err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{})
+	err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -174,26 +174,12 @@ fromAll()
 	// endregion CreateContinuous
 }
 
-func CreateV2Engine(client *kurrentdb.ProjectionClient) {
-	// region CreateContinuous_V2Engine
-	script := `fromAll().when({$init: function (state, ev) {return {};}});`
-	name := fmt.Sprintf("countEvent_CreateV2_%s", uuid.New())
-	err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{
-		EngineVersion: kurrentdb.ProjectionEngineVersionV2,
-	})
-
-	if err != nil {
-		panic(err)
-	}
-	// endregion CreateContinuous_V2Engine
-}
-
-func CreateWithMetadata(client *kurrentdb.ProjectionClient) {
-	// region CreateContinuous_Metadata
+func CreateWithAnnotations(client *trogoneventstore.ProjectionClient) {
+	// region CreateContinuous_Annotations
 	script := `fromAll().when({$init: function (state, ev) {return {};}});`
 	name := fmt.Sprintf("countEvent_CreateMeta_%s", uuid.New())
-	err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{
-		Metadata: map[string]interface{}{
+	err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{
+		Annotations: map[string]string{
 			"deploy": "abc123",
 			"tool":   "gaffer",
 		},
@@ -202,18 +188,18 @@ func CreateWithMetadata(client *kurrentdb.ProjectionClient) {
 	if err != nil {
 		panic(err)
 	}
-	// endregion CreateContinuous_Metadata
+	// endregion CreateContinuous_Annotations
 }
 
-func CreateConflict(client *kurrentdb.ProjectionClient) {
+func CreateConflict(client *trogoneventstore.ProjectionClient) {
 	script := ""
 	name := ""
 
 	// region CreateContinuous_Conflict
-	err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{})
+	err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{})
 
-	if esdbErr, ok := kurrentdb.FromError(err); !ok {
-		if esdbErr.IsErrorCode(kurrentdb.ErrorCodeUnknown) && strings.Contains(esdbErr.Err().Error(), "Conflict") {
+	if esdbErr, ok := trogoneventstore.FromError(err); !ok {
+		if esdbErr.IsErrorCode(trogoneventstore.ErrorCodeUnknown) && strings.Contains(esdbErr.Err().Error(), "Conflict") {
 			log.Printf("projection %s already exists", name)
 			return
 		}
@@ -221,19 +207,19 @@ func CreateConflict(client *kurrentdb.ProjectionClient) {
 	// endregion CreateContinuous_Conflict
 }
 
-func Update(client *kurrentdb.ProjectionClient) {
+func Update(client *trogoneventstore.ProjectionClient) {
 	script := ""
 	newScript := ""
 	name := ""
 
 	// region Update
-	err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{})
+	err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{})
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = client.Update(context.Background(), name, newScript, kurrentdb.UpdateProjectionOptions{})
+	err = client.Update(context.Background(), name, newScript, trogoneventstore.UpdateProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -242,14 +228,14 @@ func Update(client *kurrentdb.ProjectionClient) {
 
 }
 
-func UpdateNotFound(client *kurrentdb.ProjectionClient) {
+func UpdateNotFound(client *trogoneventstore.ProjectionClient) {
 	script := ""
 
 	// region Update_NotFound
-	err := client.Update(context.Background(), "projection that doesn't exist", script, kurrentdb.UpdateProjectionOptions{})
+	err := client.Update(context.Background(), "projection that doesn't exist", script, trogoneventstore.UpdateProjectionOptions{})
 
-	if esdbError, ok := kurrentdb.FromError(err); !ok {
-		if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+	if esdbError, ok := trogoneventstore.FromError(err); !ok {
+		if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
 			log.Printf("projection not found")
 			return
 		}
@@ -257,9 +243,9 @@ func UpdateNotFound(client *kurrentdb.ProjectionClient) {
 	// endregion Update_NotFound
 }
 
-func ListAll(client *kurrentdb.ProjectionClient) {
+func ListAll(client *trogoneventstore.ProjectionClient) {
 	// region ListAll
-	projections, err := client.ListAll(context.Background(), kurrentdb.GenericProjectionOptions{})
+	projections, err := client.ListAll(context.Background(), trogoneventstore.GenericProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -280,9 +266,9 @@ func ListAll(client *kurrentdb.ProjectionClient) {
 	// endregion ListAll
 }
 
-func List(client *kurrentdb.ProjectionClient) {
+func List(client *trogoneventstore.ProjectionClient) {
 	// region ListContinuous
-	projections, err := client.ListContinuous(context.Background(), kurrentdb.GenericProjectionOptions{})
+	projections, err := client.ListContinuous(context.Background(), trogoneventstore.GenericProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -303,9 +289,9 @@ func List(client *kurrentdb.ProjectionClient) {
 	// endregion ListContinuous
 }
 
-func GetStatus(client *kurrentdb.ProjectionClient) {
+func GetStatus(client *trogoneventstore.ProjectionClient) {
 	// region GetStatus
-	projection, err := client.GetStatus(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+	projection, err := client.GetStatus(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -322,14 +308,14 @@ func GetStatus(client *kurrentdb.ProjectionClient) {
 	// endregion GetStatus
 }
 
-func GetState(client *kurrentdb.ProjectionClient) {
+func GetState(client *trogoneventstore.ProjectionClient) {
 	projectionName := ""
 	// region GetState
 	type Foobar struct {
 		Count int64
 	}
 
-	value, err := client.GetState(context.Background(), projectionName, kurrentdb.GetStateProjectionOptions{})
+	value, err := client.GetState(context.Background(), projectionName, trogoneventstore.GetStateProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -351,14 +337,14 @@ func GetState(client *kurrentdb.ProjectionClient) {
 	// endregion GetState
 }
 
-func GetResult(client *kurrentdb.ProjectionClient) {
+func GetResult(client *trogoneventstore.ProjectionClient) {
 	projectionName := ""
 	// region GetResult
 	type Baz struct {
 		Result int64
 	}
 
-	value, err := client.GetResult(context.Background(), projectionName, kurrentdb.GetResultProjectionOptions{})
+	value, err := client.GetResult(context.Background(), projectionName, trogoneventstore.GetResultProjectionOptions{})
 
 	if err != nil {
 		panic(err)
@@ -380,9 +366,9 @@ func GetResult(client *kurrentdb.ProjectionClient) {
 	// endregion GetResult
 }
 
-func RestartSubSystem(client *kurrentdb.ProjectionClient) {
+func RestartSubSystem(client *trogoneventstore.ProjectionClient) {
 	// region RestartSubSystem
-	err := client.RestartSubsystem(context.Background(), kurrentdb.GenericProjectionOptions{})
+	err := client.RestartSubsystem(context.Background(), trogoneventstore.GenericProjectionOptions{})
 
 	if err != nil {
 		panic(err)

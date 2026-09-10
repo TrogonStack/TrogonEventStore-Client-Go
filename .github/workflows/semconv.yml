@@ -1,0 +1,40 @@
+name: SemConv
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate pull request title and commits
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          pattern='^(feat|fix|chore)(\([A-Za-z0-9][A-Za-z0-9._/-]*\))?!?: .+'
+          [[ "$PR_TITLE" =~ $pattern ]] || exit 1
+          commit_records=$(gh api --paginate "repos/$REPOSITORY/pulls/$PR_NUMBER/commits" --jq '.[] | {parent_count: (.parents | length), subject: (.commit.message | split("\n")[0])}') || exit 1
+          [ -n "$commit_records" ] || exit 1
+          invalid=0
+          commits=0
+          while IFS= read -r record; do
+            parent_count=$(jq -er '.parent_count' <<< "$record") || exit 1
+            subject=$(jq -er '.subject' <<< "$record") || exit 1
+            [ "$parent_count" -gt 1 ] && continue
+            commits=$((commits + 1))
+            if [[ ! "$subject" =~ $pattern ]]; then
+              echo "Invalid commit subject: $subject" >&2
+              invalid=1
+            fi
+          done <<< "$commit_records"
+          [ "$commits" -gt 0 ] || exit 1
+          exit "$invalid"

@@ -4,7 +4,6 @@ import "testing"
 
 func TestStreams(t *testing.T) {
 	t.Run("AppendEvents", TestAppendEventsSuite)
-	t.Run("MultiAppend", TestMultiAppendEventsSuite)
 	t.Run("ReadStream", TestReadStreamSuite)
 	t.Run("ReadAll", TestReadAllSuite)
 	t.Run("Subscription", TestSubscriptionSuite)

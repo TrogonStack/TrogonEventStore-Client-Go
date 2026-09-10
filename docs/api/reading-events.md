@@ -4,16 +4,16 @@ order: 3
 
 # Reading Events
 
-KurrentDB provides two primary methods for reading events: reading from an
+TrogonEventStore provides two primary methods for reading events: reading from an
 individual stream to retrieve events from a specific named stream, or reading
 from the `$all` stream to access all events across the entire event store.
 
-Events in KurrentDB are organized within individual streams and use two
+Events in TrogonEventStore are organized within individual streams and use two
 distinct positioning systems to track their location. The **revision number** is
 a 64-bit signed integer (`long`) that represents the sequential position of an
 event within its specific stream. Events are numbered starting from 0, with each
 new event receiving the next sequential revision number (0, 1, 2, 3...). The
-**global position** represents the event's location in KurrentDB's global
+**global position** represents the event's location in TrogonEventStore's global
 transaction log and consists of two coordinates: the `commit` position (where
 the transaction was committed in the log) and the `prepare` position (where the
 transaction was initially prepared).
@@ -36,14 +36,14 @@ section below.
 The simplest way to read a stream forwards is to supply a stream name, read
 direction, and revision from which to start. The revision can be specified in several ways:
 
-- Use `kurrentdb.Start{}` to begin from the very beginning of the stream
-- Use `kurrentdb.End{}` to begin from the current end of the stream
-- Use `kurrentdb.StreamRevision{}` with a specific revision number (64-bit signed integer)
+- Use `trogoneventstore.Start{}` to begin from the very beginning of the stream
+- Use `trogoneventstore.End{}` to begin from the current end of the stream
+- Use `trogoneventstore.StreamRevision{}` with a specific revision number (64-bit signed integer)
 
 ```go{3}
-options := kurrentdb.ReadStreamOptions{
-    From:      kurrentdb.Start{},
-    Direction: kurrentdb.Forwards,
+options := trogoneventstore.ReadStreamOptions{
+    From:      trogoneventstore.Start{},
+    Direction: trogoneventstore.Forwards,
 }
 stream, err := db.ReadStream(context.Background(), "some-stream", options, 100)
 
@@ -57,8 +57,8 @@ defer stream.Close()
 You can also start reading from a specific revision in the stream:
 
 ```go{2}
-options:= kurrentdb.ReadStreamOptions{
-    From: kurrentdb.Revision(10),
+options:= trogoneventstore.ReadStreamOptions{
+    From: trogoneventstore.Revision(10),
 }
 ```
 
@@ -92,17 +92,17 @@ In the example below, we read a maximum of 10 events from the stream:
 stream, err := db.ReadStream(
   context.Background(),
   "order-123",
-  kurrentdb.ReadStreamOptions{},
+  trogoneventstore.ReadStreamOptions{},
   10
 )
 ```
 
 #### resolveLinkTos
 
-When using projections to create new events you can set whether the generated events are pointers to existing events. Setting this value to true will tell KurrentDB to return the event as well as the event linking to it.
+When using projections to create new events you can set whether the generated events are pointers to existing events. Setting this value to true will tell TrogonEventStore to return the event as well as the event linking to it.
 
 ```go
-options:= kurrentdb.ReadAllOptions{
+options:= trogoneventstore.ReadAllOptions{
   ResolveLinkTos: true,
 }
 ```
@@ -112,9 +112,9 @@ options:= kurrentdb.ReadAllOptions{
 The credentials used to read the data can be used by the subscription as follows. This will override the default credentials set on the connection.
 
 ```go{3-6}
-options := kurrentdb.ReadStreamOptions{
-    From: kurrentdb.Start{},
-    Authenticated: &kurrentdb.Credentials{
+options := trogoneventstore.ReadStreamOptions{
+    From: trogoneventstore.Start{},
+    Authenticated: &trogoneventstore.Credentials{
         Login:    "admin",
         Password: "changeit",
     },
@@ -126,9 +126,9 @@ options := kurrentdb.ReadStreamOptions{
 In addition to reading a stream forwards, streams can be read backwards. To read all the events backwards, set the `fromRevision` to `END`:
 
 ```go{2-3}
-options:= kurrentdb.ReadStreamOptions{
-    Direction: kurrentdb.Backwards,
-    From:      kurrentdb.End{},
+options:= trogoneventstore.ReadStreamOptions{
+    Direction: trogoneventstore.Backwards,
+    From:      trogoneventstore.End{},
 }
 
 stream, err := db.ReadStream(context.Background(), "some-stream", ropts, 10)
@@ -147,7 +147,7 @@ It is important to handle this error when attempting to iterate a stream that ma
 For example:
 
 ```go{13-14}
-stream, err := db.ReadStream(context.Background(), "order-123", kurrentdb.ReadStreamOptions{}, 100)
+stream, err := db.ReadStream(context.Background(), "order-123", trogoneventstore.ReadStreamOptions{}, 100)
 
 if err != nil {
     panic(err)
@@ -158,8 +158,8 @@ defer stream.Close()
 for {
     event, err := stream.Recv()
 
-    if err, ok := kurrentdb.FromError(err); !ok {
-        if err.Code() == kurrentdb.ErrorCodeResourceNotFound {
+    if err, ok := trogoneventstore.FromError(err); !ok {
+        if err.Code() == trogoneventstore.ErrorCodeResourceNotFound {
             fmt.Print("Stream not found")
         } else if errors.Is(err, io.EOF) {
             break
@@ -187,9 +187,9 @@ transaction log position can be specified in several ways:
 - Use `fromPosition` with a specific `Position` object containing commit and prepare coordinates
 
 ```go{1-4}
-options := kurrentdb.ReadAllOptions{
-    From:      kurrentdb.Start{},
-    Direction: kurrentdb.Forwards,
+options := trogoneventstore.ReadAllOptions{
+    From:      trogoneventstore.Start{},
+    Direction: trogoneventstore.Forwards,
 }
 
 stream, err := db.ReadAll(context.Background(), options, 100)
@@ -198,9 +198,9 @@ stream, err := db.ReadAll(context.Background(), options, 100)
 You can also start reading from a specific position in the transaction log:
 
 ```go{3-6}
-options := kurrentdb.ReadAllOptions{
+options := trogoneventstore.ReadAllOptions{
   ResolveLinkTos: false,
-  From: &kurrentdb.Position{
+  From: &trogoneventstore.Position{
     Commit: 10,
     Prepare: 10,
   },
@@ -239,20 +239,20 @@ In the example below, we read a maximum of 10 events:
 stream, err := db.ReadStream(
   context.Background(),
   "order-123",
-  kurrentdb.ReadAllOptions{},
+  trogoneventstore.ReadAllOptions{},
   10
 )
 ```
 
 #### resolveLinkTos
 
-When using projections to create new events you can set whether the generated events are pointers to existing events. Setting this value to true will tell KurrentDB to return the event as well as the event linking to it.
+When using projections to create new events you can set whether the generated events are pointers to existing events. Setting this value to true will tell TrogonEventStore to return the event as well as the event linking to it.
 
 ```go{3}
-options := kurrentdb.ReadAllOptions{
-  From:      kurrentdb.Start{},
+options := trogoneventstore.ReadAllOptions{
+  From:      trogoneventstore.Start{},
   ResolveLinkTos: true,
-  Direction: kurrentdb.Forwards,
+  Direction: trogoneventstore.Forwards,
 }
 ```
 
@@ -260,9 +260,9 @@ options := kurrentdb.ReadAllOptions{
 The credentials used to read the data can be used by the subscription as follows. This will override the default credentials set on the connection.
 
 ```go{3-6}
-options := kurrentdb.ReadAllOptions{
-  From: kurrentdb.Start{},
-  Authenticated: &kurrentdb.Credentials{
+options := trogoneventstore.ReadAllOptions{
+  From: trogoneventstore.Start{},
+  Authenticated: &trogoneventstore.Credentials{
     Login:    "admin",
     Password: "changeit",
   },
@@ -272,12 +272,12 @@ options := kurrentdb.ReadAllOptions{
 ### Reading backwards
 
 In addition to reading the `$all` stream forwards, it can be read backwards. To
-read all the events backwards, set the _direction_ to `kurrentdb.Backwards`:
+read all the events backwards, set the _direction_ to `trogoneventstore.Backwards`:
 
 ```go{2-3}
-options := kurrentdb.ReadAllOptions{
-    Direction: kurrentdb.Backwards,
-    From:      kurrentdb.End{},
+options := trogoneventstore.ReadAllOptions{
+    Direction: trogoneventstore.Backwards,
+    From:      trogoneventstore.End{},
 }
 ```
 
@@ -287,12 +287,12 @@ Read one event backwards to find the last position in the `$all` stream.
 
 ### Handling system events
 
-KurrentDB will also return system events when reading from the `$all` stream. In most cases you can ignore these events.
+TrogonEventStore will also return system events when reading from the `$all` stream. In most cases you can ignore these events.
 
 All system events begin with `$` or `$$` and can be easily ignored by checking the `EventType` property.
 
 ```go{22-24}
-stream, err := db.ReadAll(context.Background(), kurrentdb.ReadAllOptions{}, 100)
+stream, err := db.ReadAll(context.Background(), trogoneventstore.ReadAllOptions{}, 100)
 
 if err != nil {
     panic(err)

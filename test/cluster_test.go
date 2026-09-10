@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
-	"github.com/kurrent-io/KurrentDB-Client-Go/protos/kurrentdb/protocols/v1/gossip"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/protos/trogoneventstore/protocols/v1/gossip"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"net/http"
 	"testing"
 	"time"
@@ -34,18 +34,18 @@ func (s *ClusterTestSuite) TestNotLeaderExceptionButWorkAfterRetry() {
 	ctx := context.Background()
 	retryCount := 10
 	for count := 0; count < retryCount; count++ {
-		config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?nodepreference=follower&tlsverifycert=false"))
+		config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?nodepreference=follower&tlsverifycert=false"))
 		s.Require().NoError(err, "Failed to parse connection string")
 
-		db, err := kurrentdb.NewClient(config)
-		s.Require().NoError(err, "Failed to create KurrentDB client")
+		db, err := trogoneventstore.NewClient(config)
+		s.Require().NoError(err, "Failed to create TrogonEventStore client")
 
 		streamID := s.fixture.NewStreamId()
 		group := s.fixture.NewGroupId()
 
-		err = db.CreatePersistentSubscription(ctx, streamID, group, kurrentdb.PersistentStreamSubscriptionOptions{})
-		if kurrentDbError, ok := kurrentdb.FromError(err); !ok {
-			if kurrentDbError.IsErrorCode(kurrentdb.ErrorCodeResourceAlreadyExists) {
+		err = db.CreatePersistentSubscription(ctx, streamID, group, trogoneventstore.PersistentStreamSubscriptionOptions{})
+		if serverError, ok := trogoneventstore.FromError(err); !ok {
+			if serverError.IsErrorCode(trogoneventstore.ErrorCodeResourceAlreadyExists) {
 				// Retry if the stream name is not random enough.
 				time.Sleep(1 * time.Second)
 				db.Close()
@@ -54,14 +54,14 @@ func (s *ClusterTestSuite) TestNotLeaderExceptionButWorkAfterRetry() {
 		}
 		s.Assert().NotNil(err)
 		// Try again. Should succeed as the db will reconnect to the leader.
-		err = db.CreatePersistentSubscription(ctx, streamID, group, kurrentdb.PersistentStreamSubscriptionOptions{})
-		if kurrentDbError, ok := kurrentdb.FromError(err); !ok {
-			if kurrentDbError.IsErrorCode(kurrentdb.ErrorCodeResourceAlreadyExists) {
+		err = db.CreatePersistentSubscription(ctx, streamID, group, trogoneventstore.PersistentStreamSubscriptionOptions{})
+		if serverError, ok := trogoneventstore.FromError(err); !ok {
+			if serverError.IsErrorCode(trogoneventstore.ErrorCodeResourceAlreadyExists) {
 				db.Close()
 				return
 			}
 			db.Close()
-			s.T().Fatalf("Failed to create persistent subscription: %v", kurrentDbError)
+			s.T().Fatalf("Failed to create persistent subscription: %v", serverError)
 		}
 		s.Assert().Nil(err)
 		db.Close()
@@ -72,15 +72,15 @@ func (s *ClusterTestSuite) TestNotLeaderExceptionButWorkAfterRetry() {
 
 func (s *ClusterTestSuite) TestReadStreamAfterClusterRebalanced() {
 	ctx := context.Background()
-	config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?nodepreference=leader&tlsverifycert=false"))
+	config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?nodepreference=leader&tlsverifycert=false"))
 	s.Require().NoError(err, "Failed to parse connection string")
 
-	db, err := kurrentdb.NewClient(config)
-	s.Require().NoError(err, "Failed to create KurrentDB client")
+	db, err := trogoneventstore.NewClient(config)
+	s.Require().NoError(err, "Failed to create TrogonEventStore client")
 	defer db.Close()
 
 	streamID := s.fixture.NewStreamId()
-	options := kurrentdb.ReadStreamOptions{From: kurrentdb.Start{}}
+	options := trogoneventstore.ReadStreamOptions{From: trogoneventstore.Start{}}
 	stream, err := db.ReadStream(ctx, streamID, options, 10)
 	if err != nil {
 		s.T().Errorf("failed to read stream: %v", err)

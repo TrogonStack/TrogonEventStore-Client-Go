@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"github.com/google/uuid"
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -36,8 +36,8 @@ func (s *ConnectionTestSuite) TestCloseConnection() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	opts := kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	opts := trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}
 
 	_, err := client.AppendToStream(ctx, streamID.String(), opts, testEvent)
@@ -45,10 +45,10 @@ func (s *ConnectionTestSuite) TestCloseConnection() {
 
 	// Close the client and attempt another append to verify connection is closed.
 	client.Close()
-	opts.StreamState = kurrentdb.Any{}
+	opts.StreamState = trogoneventstore.Any{}
 	_, err = client.AppendToStream(ctx, streamID.String(), opts, testEvent)
 
-	kurrentDbError, ok := kurrentdb.FromError(err)
+	serverError, ok := trogoneventstore.FromError(err)
 	assert.False(s.T(), ok)
-	assert.Equal(s.T(), kurrentdb.ErrorCodeConnectionClosed, kurrentDbError.Code())
+	assert.Equal(s.T(), trogoneventstore.ErrorCodeConnectionClosed, serverError.Code())
 }

@@ -1,1 +1,3 @@
-This changelog is no longer maintained. The information has been moved to the [GitHub release notes](https://github.com/kurrent-io/KurrentDB-Client-Go/releases) page.
+# Changelog
+
+Release notes are maintained by Release Please on the [GitHub Releases](https://github.com/TrogonStack/TrogonEventStore-Client-Go/releases) page.

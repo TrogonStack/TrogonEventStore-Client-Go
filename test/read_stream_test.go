@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -38,8 +38,8 @@ func (s *ReadStreamTestSuite) TestReadStreamEventsForwardFromZero() {
 	// Arrange
 	streamId := fixture.NewStreamId()
 	testEvents := fixture.CreateTestEvents(streamId, 10)
-	opts := kurrentdb.ReadStreamOptions{
-		Direction:      kurrentdb.Forwards,
+	opts := trogoneventstore.ReadStreamOptions{
+		Direction:      trogoneventstore.Forwards,
 		ResolveLinkTos: true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -65,9 +65,9 @@ func (s *ReadStreamTestSuite) TestReadStreamEventsBackwardFromEnd() {
 	// Arrange
 	streamId := fixture.NewStreamId()
 	testEvents := fixture.CreateTestEvents(streamId, 10)
-	opts := kurrentdb.ReadStreamOptions{
-		Direction:      kurrentdb.Backwards,
-		From:           kurrentdb.End{},
+	opts := trogoneventstore.ReadStreamOptions{
+		Direction:      trogoneventstore.Backwards,
+		From:           trogoneventstore.End{},
 		ResolveLinkTos: true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -96,7 +96,7 @@ func (s *ReadStreamTestSuite) TestReadStreamReturnsEOFAfterCompletion() {
 	fixture.CreateTestEvents(streamId, 10)
 
 	// Act
-	stream, err := client.ReadStream(context.Background(), streamId, kurrentdb.ReadStreamOptions{}, 1_024)
+	stream, err := client.ReadStream(context.Background(), streamId, trogoneventstore.ReadStreamOptions{}, 1_024)
 	require.NoError(s.T(), err)
 	defer stream.Close()
 
@@ -118,7 +118,7 @@ func (s *ReadStreamTestSuite) TestReadStreamNotFound() {
 	streamId := fixture.NewStreamId()
 
 	// Act
-	stream, err := client.ReadStream(context.Background(), streamId, kurrentdb.ReadStreamOptions{}, 1)
+	stream, err := client.ReadStream(context.Background(), streamId, trogoneventstore.ReadStreamOptions{}, 1)
 	require.NoError(s.T(), err)
 	defer stream.Close()
 
@@ -126,9 +126,9 @@ func (s *ReadStreamTestSuite) TestReadStreamNotFound() {
 	evt, err := stream.Recv()
 	require.Nil(s.T(), evt)
 
-	kurrentDbError, ok := kurrentdb.FromError(err)
+	serverError, ok := trogoneventstore.FromError(err)
 	require.False(s.T(), ok)
-	require.Equal(s.T(), kurrentDbError.Code(), kurrentdb.ErrorCodeResourceNotFound)
+	require.Equal(s.T(), serverError.Code(), trogoneventstore.ErrorCodeResourceNotFound)
 }
 
 func (s *ReadStreamTestSuite) TestReadStreamWithMaxAge() {
@@ -140,17 +140,17 @@ func (s *ReadStreamTestSuite) TestReadStreamWithMaxAge() {
 	streamId := fixture.NewStreamId()
 	fixture.CreateTestEvents(streamId, 10)
 
-	metadata := kurrentdb.StreamMetadata{}
+	metadata := trogoneventstore.StreamMetadata{}
 	metadata.SetMaxAge(time.Second)
 
-	_, err := client.SetStreamMetadata(context.Background(), streamId, kurrentdb.AppendToStreamOptions{}, metadata)
+	_, err := client.SetStreamMetadata(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{}, metadata)
 	assert.NoError(s.T(), err)
 
 	// Wait for events to expire
 	time.Sleep(2 * time.Second)
 
 	// Act
-	stream, err := client.ReadStream(context.Background(), streamId, kurrentdb.ReadStreamOptions{}, 10)
+	stream, err := client.ReadStream(context.Background(), streamId, trogoneventstore.ReadStreamOptions{}, 10)
 	require.NoError(s.T(), err)
 	defer stream.Close()
 
@@ -168,8 +168,8 @@ func (s *ReadStreamTestSuite) TestReadStreamWithCredentialsOverride() {
 
 	// Arrange
 	streamId := fixture.NewStreamId()
-	opts := kurrentdb.AppendToStreamOptions{
-		Authenticated: &kurrentdb.Credentials{
+	opts := trogoneventstore.AppendToStreamOptions{
+		Authenticated: &trogoneventstore.Credentials{
 			Login:    "admin",
 			Password: "changeit",
 		},

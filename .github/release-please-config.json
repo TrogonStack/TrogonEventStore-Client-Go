@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "8c6a6bc7c1fe0251cd1e049187232625b4fed141",
+  "signoff": "SHT Bot <61149376+sht-bot@users.noreply.github.com>",
+  "packages": {
+    ".": {
+      "release-type": "go",
+      "package-name": "TrogonEventStore-Client-Go",
+      "component": "TrogonEventStore-Client-Go",
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "pull-request-title-pattern": "chore${scope}: release${component} ${version}",
+      "bump-minor-pre-major": false,
+      "bump-patch-for-minor-pre-major": false
+    }
+  }
+}
