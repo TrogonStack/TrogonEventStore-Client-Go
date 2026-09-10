@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -31,7 +31,7 @@ func (s *InsecureAuthSuite) TestCallInsecureWithoutCredentials() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := client.CreatePersistentSubscription(ctx, s.fixture.NewStreamId(), s.fixture.NewGroupId(), kurrentdb.PersistentStreamSubscriptionOptions{})
+	err := client.CreatePersistentSubscription(ctx, s.fixture.NewStreamId(), s.fixture.NewGroupId(), trogoneventstore.PersistentStreamSubscriptionOptions{})
 	s.NoError(err)
 }
 
@@ -40,8 +40,8 @@ func (s *InsecureAuthSuite) TestCallInsecureWithInvalidCredentials() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	opts := kurrentdb.PersistentStreamSubscriptionOptions{
-		Authenticated: &kurrentdb.Credentials{
+	opts := trogoneventstore.PersistentStreamSubscriptionOptions{
+		Authenticated: &trogoneventstore.Credentials{
 			Login:    "invalid",
 			Password: "invalid",
 		},

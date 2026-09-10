@@ -1,0 +1,57 @@
+name: Integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.1.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Start TrogonEventStore
+        run: make start-server
+      - name: Run integration tests
+        run: go test --count=1 ./test
+      - name: Stop TrogonEventStore
+        if: always()
+        run: make stop-server
+
+  oauth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.1.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Start OAuth stack
+        run: make start-oauth
+      - name: Run OAuth integration tests
+        env:
+          TROGON_EVENTSTORE_OAUTH_TESTS: "1"
+        run: go test --count=1 ./test -run '^TestOAuthAuthenticationSuite$'
+      - name: Stop OAuth stack
+        if: always()
+        run: make stop-oauth

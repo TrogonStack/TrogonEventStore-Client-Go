@@ -19,7 +19,7 @@ You can subscribe to a single stream or to `$all` to process all events in the d
 **Stream subscription:**
 
 ```go
-stream, err := db.SubscribeToStream(context.Background(), "order-123", kurrentdb.SubscribeToStreamOptions{})
+stream, err := db.SubscribeToStream(context.Background(), "order-123", trogoneventstore.SubscribeToStreamOptions{})
 
 if err != nil {
     panic(err)
@@ -46,7 +46,7 @@ for {
 **`$all` subscription:**
 
 ```go
-stream, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{})
+stream, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{})
 
 if err != nil {
     panic(err)
@@ -87,8 +87,8 @@ The positions provided to the subscriptions are exclusive. You will only receive
 To subscribe to a stream from a specific position, provide a stream position (`Start{}`, `End{}` or a 64-bit signed integer representing the revision number):
 
 ```go{2}
-db.SubscribeToStream(context.Background(), "order-123", kurrentdb.SubscribeToStreamOptions{
-    From: kurrentdb.Revision(20),
+db.SubscribeToStream(context.Background(), "order-123", trogoneventstore.SubscribeToStreamOptions{
+    From: trogoneventstore.Revision(20),
 })
 ```
 
@@ -97,8 +97,8 @@ db.SubscribeToStream(context.Background(), "order-123", kurrentdb.SubscribeToStr
 For the `$all` stream, provide a `Position` structure with prepare and commit positions:
 
 ```go{2-5}
-db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    From: kurrentdb.Position{
+db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    From: trogoneventstore.Position{
         Commit:  1_056,
         Prepare: 1_056,
     },
@@ -111,19 +111,19 @@ Subscribe to the end of a stream to get only new events:
 
 ```go
 // Stream
-options = kurrentdb.SubscribeToStreamOptions{
-    From: kurrentdb.End{},
+options = trogoneventstore.SubscribeToStreamOptions{
+    From: trogoneventstore.End{},
 }
 
 // $all
-db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    From: kurrentdb.End{},
+db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    From: trogoneventstore.End{},
 })
 ```
 
 ## Resolving link-to events
 
-Link-to events point to events in other streams in KurrentDB. These are
+Link-to events point to events in other streams in TrogonEventStore. These are
 generally created by projections such as the `$by_event_type` projection which
 links events of the same event type into the same stream. This makes it easier
 to look up all events of a specific type.
@@ -138,8 +138,8 @@ link-to events are not resolved. You can change this behaviour by setting the
 `resolveLinkTos` parameter to `true`:
 
 ```go{3}
-options = kurrentdb.SubscribeToStreamOptions{
-    From:           kurrentdb.Start{},
+options = trogoneventstore.SubscribeToStreamOptions{
+    From:           trogoneventstore.Start{},
     ResolveLinkTos: true,
 }
 
@@ -169,8 +169,8 @@ need to store the current position of the subscription somewhere, and then use
 it to restore the subscription from the point where it dropped off:
 
 ```go{22-25}
-options = kurrentdb.SubscribeToStreamOptions{
-    From: kurrentdb.Start{},
+options = trogoneventstore.SubscribeToStreamOptions{
+    From: trogoneventstore.Start{},
 }
 
 for {
@@ -192,7 +192,7 @@ for {
 
         if event.EventAppeared != nil {
             // handles the event...
-            options.From = kurrentdb.Revision(event.EventAppeared.OriginalEvent().EventNumber)
+            options.From = trogoneventstore.Revision(event.EventAppeared.OriginalEvent().EventNumber)
         }
     }
 }
@@ -203,8 +203,8 @@ stream. As mentioned previously, the `$all` stream position consists of two big
 integers (prepare and commit positions), not one:
 
 ```go{21-24}
-options = kurrentdb.SubscribeToAllOptions{
-    From: kurrentdb.Start{},
+options = trogoneventstore.SubscribeToAllOptions{
+    From: trogoneventstore.Start{},
 }
 
 for {
@@ -233,8 +233,8 @@ for {
 
 ## Handling Subscription State Changes
 
-::: info KurrentDB 23.10.0+
-This feature requires KurrentDB version 23.10.0 or later.
+::: info TrogonEventStore 23.10.0+
+This feature requires TrogonEventStore version 23.10.0 or later.
 :::
 
 When a subscription processes historical events and reaches the end of the
@@ -242,8 +242,8 @@ stream, it transitions from "catching up" to "live" mode. You can detect this
 transition using the `caughtUp` event on the subscription. 
 
 ```go{22-25}
-options = kurrentdb.SubscribeToStreamOptions{
-  From: kurrentdb.Start{},
+options = trogoneventstore.SubscribeToStreamOptions{
+  From: trogoneventstore.Start{},
 }
 
 for {
@@ -293,8 +293,8 @@ the client will use the credentials specified for the client, if you specified
 those.
 
 ```go{2-5}
-db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Authenticated: &kurrentdb.Credentials{
+db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Authenticated: &trogoneventstore.Credentials{
         Login:    "admin",
         Password: "changeit",
     },
@@ -303,7 +303,7 @@ db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
 
 ## Server-side Filtering
 
-KurrentDB allows you to filter events while subscribing to the `$all` stream to only receive the events you care about. You can filter by event type or stream name using a regular expression or a prefix. Server-side filtering is currently only available on the `$all` stream.
+TrogonEventStore allows you to filter events while subscribing to the `$all` stream to only receive the events you care about. You can filter by event type or stream name using a regular expression or a prefix. Server-side filtering is currently only available on the `$all` stream.
 
 ::: tip
 Server-side filtering was introduced as a simpler alternative to projections. You should consider filtering before creating a projection to include the events you care about.
@@ -312,9 +312,9 @@ Server-side filtering was introduced as a simpler alternative to projections. Yo
 **Basic filtering:**
 
 ```go
-db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Filter: &kurrentdb.SubscriptionFilter{
-        Type:     kurrentdb.StreamFilterType,
+db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Filter: &trogoneventstore.SubscriptionFilter{
+        Type:     trogoneventstore.StreamFilterType,
         Prefixes: []string{"test-", "other-"},
     },
 })
@@ -325,8 +325,8 @@ db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
 System events are prefixed with `$` and can be filtered out when subscribing to `$all`:
 
 ```go
-sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Filter: kurrentdb.ExcludeSystemEventsFilter(),
+sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Filter: trogoneventstore.ExcludeSystemEventsFilter(),
 })
 ```
 
@@ -335,9 +335,9 @@ sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOpti
 **By prefix:**
 
 ```go
-sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Filter: &kurrentdb.SubscriptionFilter{
-        Type:     kurrentdb.EventFilterType,
+sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Filter: &trogoneventstore.SubscriptionFilter{
+        Type:     trogoneventstore.EventFilterType,
         Prefixes: []string{"customer-"},
     },
 })
@@ -346,9 +346,9 @@ sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOpti
 **By regular expression:**
 
 ```go
-sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Filter: &kurrentdb.SubscriptionFilter{
-        Type:  kurrentdb.EventFilterType,
+sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Filter: &trogoneventstore.SubscriptionFilter{
+        Type:  trogoneventstore.EventFilterType,
         Regex: "^user|^company",
     },
 })
@@ -359,9 +359,9 @@ sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOpti
 **By prefix:**
 
 ```go
-sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Filter: &kurrentdb.SubscriptionFilter{
-        Type:     kurrentdb.StreamFilterType,
+sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Filter: &trogoneventstore.SubscriptionFilter{
+        Type:     trogoneventstore.StreamFilterType,
         Prefixes: []string{"user-"},
     },
 })
@@ -370,9 +370,9 @@ sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOpti
 **By regular expression:**
 
 ```go
-sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Filter: &kurrentdb.SubscriptionFilter{
-        Type:  kurrentdb.StreamFilterType,
+sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Filter: &trogoneventstore.SubscriptionFilter{
+        Type:  trogoneventstore.StreamFilterType,
         Regex: "^user|^company",
     },
 })
@@ -392,7 +392,7 @@ A checkpoint is the position of an event in the `$all` stream to which your appl
 To create a checkpoint, store the event's commit or prepare position.
 
 ::: warning
-If your database contains events created by the legacy TCP client using the [transaction feature](https://docs.kurrent.io/clients/tcp/dotnet/21.2/appending.html#transactions), you should store both the commit and prepare positions together as your checkpoint.
+If your database contains events created by the legacy TCP client using the [transaction feature](legacy TCP client documentation#transactions), you should store both the commit and prepare positions together as your checkpoint.
 :::
 
 ### Updating checkpoints at regular intervals
@@ -428,9 +428,9 @@ By default, the checkpoint notification is sent after every 32 non-system events
 You can adjust the checkpoint interval to change how often the client is notified. 
 
 ```go{6}
-sub, err := db.SubscribeToAll(context.Background(), kurrentdb.SubscribeToAllOptions{
-    Filter: &kurrentdb.SubscriptionFilter{
-        Type:  kurrentdb.EventFilterType,
+sub, err := db.SubscribeToAll(context.Background(), trogoneventstore.SubscribeToAllOptions{
+    Filter: &trogoneventstore.SubscriptionFilter{
+        Type:  trogoneventstore.EventFilterType,
         Regex: "/^[^\\$].*/",
     },
     CheckpointInterval: 1,

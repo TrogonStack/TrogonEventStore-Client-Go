@@ -2,7 +2,7 @@ package test
 
 import (
 	"context"
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
@@ -30,9 +30,9 @@ func (s *PersistentSubReadTestSuite) TestReadExistingStream_AckToReceiveNewEvent
 	firstEvent := s.fixture.CreateTestEvent()
 	secondEvent := s.fixture.CreateTestEvent()
 	thirdEvent := s.fixture.CreateTestEvent()
-	events := []kurrentdb.EventData{firstEvent, secondEvent, thirdEvent}
+	events := []trogoneventstore.EventData{firstEvent, secondEvent, thirdEvent}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{}, events...)
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{}, events...)
 	s.Require().NoError(err)
 
 	groupName := s.fixture.NewGroupId()
@@ -40,14 +40,14 @@ func (s *PersistentSubReadTestSuite) TestReadExistingStream_AckToReceiveNewEvent
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Start{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Start{},
 		},
 	)
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{
 			BufferSize: 2,
 		})
 	s.Require().NoError(err)
@@ -71,13 +71,13 @@ func (s *PersistentSubReadTestSuite) TestReadExistingStream_AckToReceiveNewEvent
 
 func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromBeginning_AndEventsInIt() {
 	streamId := s.fixture.NewStreamId()
-	events := make([]kurrentdb.EventData, 10)
+	events := make([]trogoneventstore.EventData, 10)
 	for i := 0; i < 10; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events...)
 	s.Require().NoError(err)
 
@@ -86,14 +86,14 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromBeginning_And
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Start{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Start{},
 		},
 	)
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -111,24 +111,24 @@ func (s *PersistentSubReadTestSuite) TestToNonExistingStream_StartFromBeginning_
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Start{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Start{},
 		},
 	)
 	s.Require().NoError(err)
 
-	events := make([]kurrentdb.EventData, 10)
+	events := make([]trogoneventstore.EventData, 10)
 	for i := 0; i < 10; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events...)
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -141,13 +141,13 @@ func (s *PersistentSubReadTestSuite) TestToNonExistingStream_StartFromBeginning_
 
 func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromEnd_EventsInItAndAppendEventsAfterwards() {
 	streamId := s.fixture.NewStreamId()
-	events := make([]kurrentdb.EventData, 11)
+	events := make([]trogoneventstore.EventData, 11)
 	for i := 0; i < 11; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events[:10]...)
 	s.Require().NoError(err)
 
@@ -156,19 +156,19 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromEnd_EventsInI
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.End{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.End{},
 		},
 	)
 	s.Require().NoError(err)
 
-	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.Revision(9),
+	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.Revision(9),
 	}, events[10])
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -181,13 +181,13 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromEnd_EventsInI
 
 func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromEnd_EventsInIt() {
 	streamId := s.fixture.NewStreamId()
-	events := make([]kurrentdb.EventData, 10)
+	events := make([]trogoneventstore.EventData, 10)
 	for i := 0; i < 10; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events...)
 	s.Require().NoError(err)
 
@@ -196,8 +196,8 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromEnd_EventsInI
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.End{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.End{},
 		},
 	)
 	s.Require().NoError(err)
@@ -206,7 +206,7 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromEnd_EventsInI
 	defer cancel()
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		ctx, streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		ctx, streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -233,24 +233,24 @@ func (s *PersistentSubReadTestSuite) TestToNonExistingStream_StartFromTwo_Append
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Revision(2),
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Revision(2),
 		},
 	)
 	s.Require().NoError(err)
 
-	events := make([]kurrentdb.EventData, 4)
+	events := make([]trogoneventstore.EventData, 4)
 	for i := 0; i < 4; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events...)
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -263,13 +263,13 @@ func (s *PersistentSubReadTestSuite) TestToNonExistingStream_StartFromTwo_Append
 
 func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFrom10_EventsInItAppendEventsAfterwards() {
 	streamId := s.fixture.NewStreamId()
-	events := make([]kurrentdb.EventData, 11)
+	events := make([]trogoneventstore.EventData, 11)
 	for i := 0; i < 11; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events[:10]...)
 	s.Require().NoError(err)
 
@@ -278,19 +278,19 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFrom10_EventsInIt
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Revision(10),
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Revision(10),
 		},
 	)
 	s.Require().NoError(err)
 
-	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.Revision(9),
+	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.Revision(9),
 	}, events[10])
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -303,13 +303,13 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFrom10_EventsInIt
 
 func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFrom4_EventsInIt() {
 	streamId := s.fixture.NewStreamId()
-	events := make([]kurrentdb.EventData, 11)
+	events := make([]trogoneventstore.EventData, 11)
 	for i := 0; i < 11; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events[:10]...)
 	s.Require().NoError(err)
 
@@ -318,19 +318,19 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFrom4_EventsInIt(
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Revision(4),
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Revision(4),
 		},
 	)
 	s.Require().NoError(err)
 
-	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.Revision(9),
+	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.Revision(9),
 	}, events[10])
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -343,13 +343,13 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFrom4_EventsInIt(
 
 func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromHigherRevisionThenEventsInStream_EventsInItAppendEventsAfterwards() {
 	streamId := s.fixture.NewStreamId()
-	events := make([]kurrentdb.EventData, 12)
+	events := make([]trogoneventstore.EventData, 12)
 	for i := 0; i < 12; i++ {
 		events[i] = s.fixture.CreateTestEvent()
 	}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.NoStream{},
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.NoStream{},
 	}, events[:11]...)
 	s.Require().NoError(err)
 
@@ -358,19 +358,19 @@ func (s *PersistentSubReadTestSuite) TestToExistingStream_StartFromHigherRevisio
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Revision(11),
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Revision(11),
 		},
 	)
 	s.Require().NoError(err)
 
-	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.Revision(10),
+	_, err = s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.Revision(10),
 	}, events[11])
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{})
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{})
 	s.Require().NoError(err)
 	defer readConn.Close()
 
@@ -386,9 +386,9 @@ func (s *PersistentSubReadTestSuite) TestReadExistingStream_NackToReceiveNewEven
 	firstEvent := s.fixture.CreateTestEvent()
 	secondEvent := s.fixture.CreateTestEvent()
 	thirdEvent := s.fixture.CreateTestEvent()
-	events := []kurrentdb.EventData{firstEvent, secondEvent, thirdEvent}
+	events := []trogoneventstore.EventData{firstEvent, secondEvent, thirdEvent}
 
-	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, kurrentdb.AppendToStreamOptions{}, events...)
+	_, err := s.fixture.client.AppendToStream(context.Background(), streamId, trogoneventstore.AppendToStreamOptions{}, events...)
 	s.Require().NoError(err)
 
 	groupName := s.fixture.NewGroupId()
@@ -396,14 +396,14 @@ func (s *PersistentSubReadTestSuite) TestReadExistingStream_NackToReceiveNewEven
 		context.Background(),
 		streamId,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
-			StartFrom: kurrentdb.Start{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{
+			StartFrom: trogoneventstore.Start{},
 		},
 	)
 	s.Require().NoError(err)
 
 	readConn, err := s.fixture.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{
 			BufferSize: 2,
 		})
 	s.Require().NoError(err)
@@ -417,7 +417,7 @@ func (s *PersistentSubReadTestSuite) TestReadExistingStream_NackToReceiveNewEven
 	s.Require().NotNil(secondRead)
 	s.Require().Equal(secondEvent.EventID, secondRead.OriginalEvent().EventID)
 
-	err = readConn.Nack("test reason", kurrentdb.NackActionPark, firstRead)
+	err = readConn.Nack("test reason", trogoneventstore.NackActionPark, firstRead)
 	s.Require().NoError(err)
 
 	thirdRead := readConn.Recv()
@@ -433,20 +433,20 @@ func (s *PersistentSubReadTestSuite) TestPersistentSubscriptionToAll_Read() {
 	err := s.fixture.client.CreatePersistentSubscriptionToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.PersistentAllSubscriptionOptions{
-			StartFrom: kurrentdb.Start{},
+		trogoneventstore.PersistentAllSubscriptionOptions{
+			StartFrom: trogoneventstore.Start{},
 		},
 	)
 
 	if err != nil {
-		if convertedErr, ok := kurrentdb.FromError(err); ok && convertedErr.Code() == kurrentdb.ErrorCodeUnsupportedFeature && s.fixture.IsKurrentDbVersion20() {
+		if convertedErr, ok := trogoneventstore.FromError(err); ok && convertedErr.Code() == trogoneventstore.ErrorCodeUnsupportedFeature && s.fixture.IsServerVersion20() {
 			s.T().Skip()
 		}
 	}
 	s.Require().NoError(err)
 
 	readConnectionClient, err := s.fixture.client.SubscribeToPersistentSubscriptionToAll(
-		context.Background(), groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{
+		context.Background(), groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{
 			BufferSize: 2,
 		},
 	)

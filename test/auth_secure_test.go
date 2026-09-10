@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -32,7 +32,7 @@ func (s *SecureAuthTestSuite) TestCallWithTLSAndDefaultCredentials() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := s.fixture.client.CreatePersistentSubscription(ctx, fixture.NewStreamId(), fixture.NewGroupId(), kurrentdb.PersistentStreamSubscriptionOptions{})
+	err := s.fixture.client.CreatePersistentSubscription(ctx, fixture.NewStreamId(), fixture.NewGroupId(), trogoneventstore.PersistentStreamSubscriptionOptions{})
 	s.NoError(err, "Unexpected failure")
 }
 
@@ -42,8 +42,8 @@ func (s *SecureAuthTestSuite) TestCallWithTLSAndOverrideCredentials() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	opts := kurrentdb.PersistentStreamSubscriptionOptions{
-		Authenticated: &kurrentdb.Credentials{
+	opts := trogoneventstore.PersistentStreamSubscriptionOptions{
+		Authenticated: &trogoneventstore.Credentials{
 			Login:    "admin",
 			Password: "changeit",
 		},
@@ -59,8 +59,8 @@ func (s *SecureAuthTestSuite) TestCallWithTLSAndInvalidOverrideCredentials() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	opts := kurrentdb.PersistentStreamSubscriptionOptions{
-		Authenticated: &kurrentdb.Credentials{
+	opts := trogoneventstore.PersistentStreamSubscriptionOptions{
+		Authenticated: &trogoneventstore.Credentials{
 			Login:    "invalid",
 			Password: "invalid",
 		},

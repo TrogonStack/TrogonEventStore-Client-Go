@@ -11,33 +11,33 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"github.com/google/uuid"
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
 	"github.com/stretchr/testify/require"
 )
 
-type KurrentDBVersion struct {
+type TrogonEventStoreVersion struct {
 	Maj   int
 	Min   int
 	Patch int
 }
 
-type VersionPredicateFn = func(KurrentDBVersion) bool
+type VersionPredicateFn = func(TrogonEventStoreVersion) bool
 
 type ClientFixture struct {
 	mu     sync.Mutex
-	client *kurrentdb.Client
-	config *kurrentdb.Configuration
+	client *trogoneventstore.Client
+	config *trogoneventstore.Configuration
 }
 
 func NewInsecureClientFixture(t *testing.T) *ClientFixture {
 	t.Helper()
 
-	config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("kurrentdb://admin:changeit@localhost:2114?tls=false"))
+	config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@localhost:2114?tls=false"))
 	require.NoError(t, err, "Failed to parse connection string")
 
-	client, err := kurrentdb.NewClient(config)
-	require.NoError(t, err, "Failed to create KurrentDB client")
+	client, err := trogoneventstore.NewClient(config)
+	require.NoError(t, err, "Failed to create TrogonEventStore client")
 
 	return &ClientFixture{
 		client: client,
@@ -49,11 +49,11 @@ func NewSecureSingleNodeClientFixture(t *testing.T) *ClientFixture {
 	t.Helper()
 	tlsCaFile := "../certs/ca/ca.crt"
 
-	config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("kurrentdb://admin:changeit@localhost:2115?tls=true&tlscafile=%s", tlsCaFile))
+	config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@localhost:2115?tls=true&tlscafile=%s", tlsCaFile))
 	require.NoError(t, err, "Failed to parse connection string")
 
-	client, err := kurrentdb.NewClient(config)
-	require.NoError(t, err, "Failed to create KurrentDB client")
+	client, err := trogoneventstore.NewClient(config)
+	require.NoError(t, err, "Failed to create TrogonEventStore client")
 
 	return &ClientFixture{
 		client: client,
@@ -65,11 +65,11 @@ func NewSecureClusterClientFixture(t *testing.T) *ClientFixture {
 	t.Helper()
 	tlsCaFile := "../certs/ca/ca.crt"
 
-	config, err := kurrentdb.ParseConnectionString(fmt.Sprintf("kurrentdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?tls=true&tlscafile=%s", tlsCaFile))
+	config, err := trogoneventstore.ParseConnectionString(fmt.Sprintf("esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?tls=true&tlscafile=%s", tlsCaFile))
 	require.NoError(t, err, "Failed to parse connection string")
 
-	client, err := kurrentdb.NewClient(config)
-	require.NoError(t, err, "Failed to create KurrentDB client")
+	client, err := trogoneventstore.NewClient(config)
+	require.NoError(t, err, "Failed to create TrogonEventStore client")
 
 	return &ClientFixture{
 		client: client,
@@ -77,24 +77,24 @@ func NewSecureClusterClientFixture(t *testing.T) *ClientFixture {
 	}
 }
 
-func (f *ClientFixture) Client() *kurrentdb.Client {
+func (f *ClientFixture) Client() *trogoneventstore.Client {
 	return f.client
 }
 
-func (f *ClientFixture) ProjectionClient() *kurrentdb.ProjectionClient {
-	return kurrentdb.NewProjectionClientFromExistingClient(f.client)
+func (f *ClientFixture) ProjectionClient() *trogoneventstore.ProjectionClient {
+	return trogoneventstore.NewProjectionClientFromExistingClient(f.client)
 }
 
 type TestEventOptions struct {
 	EventType   string
-	ContentType kurrentdb.ContentType
+	ContentType trogoneventstore.ContentType
 	Data        []byte
 	Metadata    []byte
 }
 
-func (f *ClientFixture) CreateTestEvent(options ...TestEventOptions) kurrentdb.EventData {
+func (f *ClientFixture) CreateTestEvent(options ...TestEventOptions) trogoneventstore.EventData {
 	eventType := "TestEvent"
-	contentType := kurrentdb.ContentTypeBinary
+	contentType := trogoneventstore.ContentTypeBinary
 	data := []byte{0xb, 0xe, 0xe, 0xf}
 	var metadata []byte
 
@@ -114,7 +114,7 @@ func (f *ClientFixture) CreateTestEvent(options ...TestEventOptions) kurrentdb.E
 		}
 	}
 
-	event := kurrentdb.EventData{
+	event := trogoneventstore.EventData{
 		EventType:   eventType,
 		ContentType: contentType,
 		EventID:     uuid.New(),
@@ -125,8 +125,8 @@ func (f *ClientFixture) CreateTestEvent(options ...TestEventOptions) kurrentdb.E
 	return event
 }
 
-func (f *ClientFixture) CreateTestEvents(streamId string, count uint32) []kurrentdb.EventData {
-	events := make([]kurrentdb.EventData, count)
+func (f *ClientFixture) CreateTestEvents(streamId string, count uint32) []trogoneventstore.EventData {
+	events := make([]trogoneventstore.EventData, count)
 	var i uint32 = 0
 	for ; i < count; i++ {
 		events[i] = f.CreateTestEvent(TestEventOptions{
@@ -137,8 +137,8 @@ func (f *ClientFixture) CreateTestEvents(streamId string, count uint32) []kurren
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
 	defer cancel()
 
-	opts := kurrentdb.AppendToStreamOptions{
-		StreamState: kurrentdb.Any{},
+	opts := trogoneventstore.AppendToStreamOptions{
+		StreamState: trogoneventstore.Any{},
 	}
 
 	_, err := f.client.AppendToStream(ctx, streamId, opts, events...)
@@ -150,8 +150,8 @@ func (f *ClientFixture) CreateTestEvents(streamId string, count uint32) []kurren
 }
 
 func (f *ClientFixture) DeleteStream(streamId string) {
-	_, err := f.client.DeleteStream(context.Background(), streamId, kurrentdb.DeleteStreamOptions{
-		StreamState: kurrentdb.StreamExists{},
+	_, err := f.client.DeleteStream(context.Background(), streamId, trogoneventstore.DeleteStreamOptions{
+		StreamState: trogoneventstore.StreamExists{},
 	})
 	if err != nil {
 		panic(err)
@@ -159,8 +159,8 @@ func (f *ClientFixture) DeleteStream(streamId string) {
 }
 
 func (f *ClientFixture) TombstoneStream(streamId string) {
-	_, err := f.client.TombstoneStream(context.Background(), streamId, kurrentdb.TombstoneStreamOptions{
-		StreamState: kurrentdb.StreamExists{},
+	_, err := f.client.TombstoneStream(context.Background(), streamId, trogoneventstore.TombstoneStreamOptions{
+		StreamState: trogoneventstore.StreamExists{},
 	})
 	if err != nil {
 		panic(err)
@@ -178,8 +178,8 @@ func (f *ClientFixture) RequireMinServerVersion(t *testing.T, major, minor, patc
 	}
 }
 
-func (f *ClientFixture) CollectEvents(stream *kurrentdb.ReadStream) ([]*kurrentdb.ResolvedEvent, error) {
-	var events []*kurrentdb.ResolvedEvent
+func (f *ClientFixture) CollectEvents(stream *trogoneventstore.ReadStream) ([]*trogoneventstore.ResolvedEvent, error) {
+	var events []*trogoneventstore.ResolvedEvent
 
 	for {
 		event, err := stream.Recv()
@@ -231,14 +231,14 @@ func (f *ClientFixture) Close(t *testing.T) {
 	}
 }
 
-func (f *ClientFixture) IsKurrentDbVersion20() bool {
-	return isKurrentDbVersion(func(version KurrentDBVersion) bool {
+func (f *ClientFixture) IsServerVersion20() bool {
+	return isServerVersion(func(version TrogonEventStoreVersion) bool {
 		return version.Maj < 21
 	})
 }
 
-func isKurrentDbVersion(predicate VersionPredicateFn) bool {
-	value, exists := os.LookupEnv("KURRENTDB_DOCKER_TAG")
+func isServerVersion(predicate VersionPredicateFn) bool {
+	value, exists := os.LookupEnv("TROGON_EVENTSTORE_DOCKER_TAG")
 	if !exists || value == "ci" {
 		return false
 	}
@@ -246,7 +246,7 @@ func isKurrentDbVersion(predicate VersionPredicateFn) bool {
 	parts := strings.Split(value, "-")
 	versionNumbers := strings.Split(parts[0], ".")
 
-	version := KurrentDBVersion{
+	version := TrogonEventStoreVersion{
 		Maj:   mustConvertToInt(versionNumbers[0]),
 		Min:   mustConvertToInt(versionNumbers[1]),
 		Patch: mustConvertToInt(versionNumbers[2]),

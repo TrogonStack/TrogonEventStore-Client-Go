@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -19,7 +19,7 @@ func TestPersistentSubscriptionSuite(t *testing.T) {
 type PersistentSubscriptionSuite struct {
 	suite.Suite
 	fixture *ClientFixture
-	client  *kurrentdb.Client
+	client  *trogoneventstore.Client
 }
 
 func (s *PersistentSubscriptionSuite) SetupTest() {
@@ -41,7 +41,7 @@ func (s *PersistentSubscriptionSuite) TestCreatePersistentStreamSubscription() {
 		context.Background(),
 		streamID,
 		"Group 1",
-		kurrentdb.PersistentStreamSubscriptionOptions{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{},
 	)
 
 	s.NoError(err)
@@ -51,14 +51,14 @@ func (s *PersistentSubscriptionSuite) TestCreatePersistentStreamSubscription_Mes
 	streamID := s.fixture.NewStreamId()
 	s.fixture.CreateTestEvents(streamID, 1)
 
-	settings := kurrentdb.SubscriptionSettingsDefault()
+	settings := trogoneventstore.SubscriptionSettingsDefault()
 	settings.MessageTimeout = 0
 
 	err := s.client.CreatePersistentSubscription(
 		context.Background(),
 		streamID,
 		"Group 1",
-		kurrentdb.PersistentStreamSubscriptionOptions{
+		trogoneventstore.PersistentStreamSubscriptionOptions{
 			Settings: &settings,
 		},
 	)
@@ -76,7 +76,7 @@ func (s *PersistentSubscriptionSuite) TestCreatePersistentStreamSubscription_Fai
 		context.Background(),
 		streamId,
 		groupId,
-		kurrentdb.PersistentStreamSubscriptionOptions{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{},
 	)
 	s.NoError(err)
 
@@ -85,12 +85,12 @@ func (s *PersistentSubscriptionSuite) TestCreatePersistentStreamSubscription_Fai
 		context.Background(),
 		streamId,
 		groupId,
-		kurrentdb.PersistentStreamSubscriptionOptions{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{},
 	)
 
-	kurrentDbError, ok := kurrentdb.FromError(err)
+	serverError, ok := trogoneventstore.FromError(err)
 	require.False(s.T(), ok)
-	assert.Equal(s.T(), kurrentdb.ErrorCodeResourceAlreadyExists, kurrentDbError.Code())
+	assert.Equal(s.T(), trogoneventstore.ErrorCodeResourceAlreadyExists, serverError.Code())
 }
 
 func (s *PersistentSubscriptionSuite) TestUpdatePersistentStreamSubscription() {
@@ -102,19 +102,19 @@ func (s *PersistentSubscriptionSuite) TestUpdatePersistentStreamSubscription() {
 		context.Background(),
 		streamID,
 		"Group 1",
-		kurrentdb.PersistentStreamSubscriptionOptions{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{},
 	)
 	s.NoError(err)
 
 	// Update settings
-	settings := kurrentdb.SubscriptionSettingsDefault()
+	settings := trogoneventstore.SubscriptionSettingsDefault()
 	settings.HistoryBufferSize++
 
 	err = s.client.UpdatePersistentSubscription(
 		context.Background(),
 		streamID,
 		"Group 1",
-		kurrentdb.PersistentStreamSubscriptionOptions{
+		trogoneventstore.PersistentStreamSubscriptionOptions{
 			Settings: &settings,
 		},
 	)
@@ -131,7 +131,7 @@ func (s *PersistentSubscriptionSuite) TestDeletePersistentSubscription() {
 		context.Background(),
 		streamID,
 		"Group 1",
-		kurrentdb.PersistentStreamSubscriptionOptions{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{},
 	)
 	s.NoError(err)
 
@@ -140,7 +140,7 @@ func (s *PersistentSubscriptionSuite) TestDeletePersistentSubscription() {
 		context.Background(),
 		streamID,
 		"Group 1",
-		kurrentdb.DeletePersistentSubscriptionOptions{},
+		trogoneventstore.DeletePersistentSubscriptionOptions{},
 	)
 
 	s.NoError(err)
@@ -156,18 +156,18 @@ func (s *PersistentSubscriptionSuite) TestPersistentSubscriptionLifecycle() {
 		context.Background(),
 		streamID,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{},
 	)
 	s.NoError(err)
 
 	// Update
-	settings := kurrentdb.SubscriptionSettingsDefault()
+	settings := trogoneventstore.SubscriptionSettingsDefault()
 	settings.MaxRetryCount = 10
 	err = s.client.UpdatePersistentSubscription(
 		context.Background(),
 		streamID,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
+		trogoneventstore.PersistentStreamSubscriptionOptions{
 			Settings: &settings,
 		},
 	)
@@ -178,7 +178,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentSubscriptionLifecycle() {
 		context.Background(),
 		streamID,
 		groupName,
-		kurrentdb.DeletePersistentSubscriptionOptions{},
+		trogoneventstore.DeletePersistentSubscriptionOptions{},
 	)
 	s.NoError(err)
 }
@@ -189,8 +189,8 @@ func (s *PersistentSubscriptionSuite) TestSubscriptionClosing() {
 
 	groupName := "Group 1"
 
-	err := s.client.CreatePersistentSubscription(context.Background(), streamId, groupName, kurrentdb.PersistentStreamSubscriptionOptions{
-		StartFrom: kurrentdb.Start{},
+	err := s.client.CreatePersistentSubscription(context.Background(), streamId, groupName, trogoneventstore.PersistentStreamSubscriptionOptions{
+		StartFrom: trogoneventstore.Start{},
 	})
 
 	s.NoError(err)
@@ -199,7 +199,7 @@ func (s *PersistentSubscriptionSuite) TestSubscriptionClosing() {
 	var droppedEvent sync.WaitGroup
 
 	subscription, err := s.client.SubscribeToPersistentSubscription(
-		context.Background(), streamId, groupName, kurrentdb.SubscribeToPersistentSubscriptionOptions{
+		context.Background(), streamId, groupName, trogoneventstore.SubscribeToPersistentSubscriptionOptions{
 			BufferSize: 2,
 		})
 
@@ -245,11 +245,11 @@ func (s *PersistentSubscriptionSuite) TestPersistentAllCreate() {
 	err := s.client.CreatePersistentSubscriptionToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.PersistentAllSubscriptionOptions{},
+		trogoneventstore.PersistentAllSubscriptionOptions{},
 	)
 
 	if err != nil {
-		if kurrentDbError, ok := kurrentdb.FromError(err); ok && kurrentDbError.Code() == kurrentdb.ErrorCodeUnsupportedFeature {
+		if serverError, ok := trogoneventstore.FromError(err); ok && serverError.Code() == trogoneventstore.ErrorCodeUnsupportedFeature {
 			s.T().Skip("Feature not supported in this version")
 		}
 	}
@@ -259,19 +259,19 @@ func (s *PersistentSubscriptionSuite) TestPersistentAllCreate() {
 func (s *PersistentSubscriptionSuite) TestPersistentAllCreateWithStrategy() {
 	groupName := s.fixture.NewGroupId()
 
-	settings := kurrentdb.SubscriptionSettingsDefault()
-	settings.ConsumerStrategyName = kurrentdb.ConsumerStrategyPinnedByCorrelation
+	settings := trogoneventstore.SubscriptionSettingsDefault()
+	settings.ConsumerStrategyName = trogoneventstore.ConsumerStrategyPinnedByCorrelation
 
 	err := s.client.CreatePersistentSubscriptionToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.PersistentAllSubscriptionOptions{
+		trogoneventstore.PersistentAllSubscriptionOptions{
 			Settings: &settings,
 		},
 	)
 
 	if err != nil {
-		if kurrentDbError, ok := kurrentdb.FromError(err); ok && kurrentDbError.Code() == kurrentdb.ErrorCodeUnsupportedFeature {
+		if serverError, ok := trogoneventstore.FromError(err); ok && serverError.Code() == trogoneventstore.ErrorCodeUnsupportedFeature {
 			s.T().Skip("Feature not supported in this version")
 		}
 	}
@@ -281,11 +281,11 @@ func (s *PersistentSubscriptionSuite) TestPersistentAllCreateWithStrategy() {
 	info, err := s.client.GetPersistentSubscriptionInfoToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.GetPersistentSubscriptionOptions{},
+		trogoneventstore.GetPersistentSubscriptionOptions{},
 	)
 	s.Require().NoError(err)
 
-	s.Require().Equal(kurrentdb.ConsumerStrategyPinnedByCorrelation, info.Settings.ConsumerStrategyName)
+	s.Require().Equal(trogoneventstore.ConsumerStrategyPinnedByCorrelation, info.Settings.ConsumerStrategyName)
 }
 
 func (s *PersistentSubscriptionSuite) TestPersistentAllUpdate() {
@@ -295,23 +295,23 @@ func (s *PersistentSubscriptionSuite) TestPersistentAllUpdate() {
 	err := s.client.CreatePersistentSubscriptionToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.PersistentAllSubscriptionOptions{},
+		trogoneventstore.PersistentAllSubscriptionOptions{},
 	)
 	if err != nil {
-		if kurrentDbError, ok := kurrentdb.FromError(err); ok && kurrentDbError.Code() == kurrentdb.ErrorCodeUnsupportedFeature {
+		if serverError, ok := trogoneventstore.FromError(err); ok && serverError.Code() == trogoneventstore.ErrorCodeUnsupportedFeature {
 			s.T().Skip("Feature not supported in this version")
 		}
 	}
 	s.Require().NoError(err)
 
 	// Update settings
-	settings := kurrentdb.SubscriptionSettingsDefault()
+	settings := trogoneventstore.SubscriptionSettingsDefault()
 	settings.ResolveLinkTos = true
 
 	err = s.client.UpdatePersistentSubscriptionToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.PersistentAllSubscriptionOptions{
+		trogoneventstore.PersistentAllSubscriptionOptions{
 			Settings: &settings,
 		},
 	)
@@ -325,10 +325,10 @@ func (s *PersistentSubscriptionSuite) TestPersistentAllDelete() {
 	err := s.client.CreatePersistentSubscriptionToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.PersistentAllSubscriptionOptions{},
+		trogoneventstore.PersistentAllSubscriptionOptions{},
 	)
 	if err != nil {
-		if kurrentDbError, ok := kurrentdb.FromError(err); ok && kurrentDbError.Code() == kurrentdb.ErrorCodeUnsupportedFeature {
+		if serverError, ok := trogoneventstore.FromError(err); ok && serverError.Code() == trogoneventstore.ErrorCodeUnsupportedFeature {
 			s.T().Skip("Feature not supported in this version")
 		}
 	}
@@ -338,7 +338,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentAllDelete() {
 	err = s.client.DeletePersistentSubscriptionToAll(
 		context.Background(),
 		groupName,
-		kurrentdb.DeletePersistentSubscriptionOptions{},
+		trogoneventstore.DeletePersistentSubscriptionOptions{},
 	)
 	s.Require().NoError(err)
 }
@@ -353,7 +353,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentListAllSubs() {
 		context.Background(),
 		streamName,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{},
+		trogoneventstore.PersistentStreamSubscriptionOptions{},
 	)
 	s.Require().NoError(err)
 
@@ -361,7 +361,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentListAllSubs() {
 		context.Background(),
 		streamName,
 		groupName,
-		kurrentdb.SubscribeToPersistentSubscriptionOptions{},
+		trogoneventstore.SubscribeToPersistentSubscriptionOptions{},
 	)
 	s.Require().NoError(err)
 	defer sub.Close()
@@ -382,7 +382,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentListAllSubs() {
 			}
 
 			if event.EventAppeared != nil {
-				err := sub.Nack("test reason", kurrentdb.NackActionPark, event.EventAppeared.Event)
+				err := sub.Nack("test reason", trogoneventstore.NackActionPark, event.EventAppeared.Event)
 				s.Require().NoError(err)
 				processed.Done()
 				count++
@@ -403,7 +403,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentListAllSubs() {
 		context.Background(),
 		streamName,
 		groupName,
-		kurrentdb.ReplayParkedMessagesOptions{},
+		trogoneventstore.ReplayParkedMessagesOptions{},
 	)
 	s.Require().NoError(err)
 
@@ -445,7 +445,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentListSubsForStream() {
 			context.Background(),
 			streamName,
 			groupName,
-			kurrentdb.PersistentStreamSubscriptionOptions{},
+			trogoneventstore.PersistentStreamSubscriptionOptions{},
 		)
 		s.Require().NoError(err)
 		expectedGroups[groupName] = struct{}{}
@@ -455,7 +455,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentListSubsForStream() {
 	subs, err := s.client.ListPersistentSubscriptionsForStream(
 		context.Background(),
 		streamName,
-		kurrentdb.ListPersistentSubscriptionsOptions{},
+		trogoneventstore.ListPersistentSubscriptionsOptions{},
 	)
 	s.Require().NoError(err)
 	s.Require().NotEmpty(subs)
@@ -475,7 +475,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentGetInfo() {
 	groupName := s.fixture.NewGroupId()
 
 	// Create subscription with custom settings
-	settings := kurrentdb.SubscriptionSettingsDefault()
+	settings := trogoneventstore.SubscriptionSettingsDefault()
 	settings.CheckpointLowerBound = 1
 	settings.CheckpointUpperBound = 1
 
@@ -483,7 +483,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentGetInfo() {
 		context.Background(),
 		streamName,
 		groupName,
-		kurrentdb.PersistentStreamSubscriptionOptions{
+		trogoneventstore.PersistentStreamSubscriptionOptions{
 			Settings: &settings,
 		},
 	)
@@ -494,7 +494,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentGetInfo() {
 		context.Background(),
 		streamName,
 		groupName,
-		kurrentdb.GetPersistentSubscriptionOptions{},
+		trogoneventstore.GetPersistentSubscriptionOptions{},
 	)
 	s.Require().NoError(err)
 
@@ -507,7 +507,7 @@ func (s *PersistentSubscriptionSuite) TestPersistentGetInfo() {
 func (s *PersistentSubscriptionSuite) TestPersistentRestartSubsystem() {
 	err := s.client.RestartPersistentSubscriptionSubsystem(
 		context.Background(),
-		kurrentdb.RestartPersistentSubscriptionSubsystemOptions{},
+		trogoneventstore.RestartPersistentSubscriptionSubsystemOptions{},
 	)
 	s.Require().NoError(err)
 }

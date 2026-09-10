@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
 
 func TestProjectionSuite(t *testing.T) {
@@ -31,7 +31,7 @@ func (s *ProjectionSuite) TestCreateProjection() {
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = s.fixture.ProjectionClient().Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+	err = s.fixture.ProjectionClient().Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
@@ -44,12 +44,12 @@ func (s *ProjectionSuite) TestDeleteProjection() {
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+	err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
 
-	err = client.Disable(context.Background(), name, kurrentdb.GenericProjectionOptions{})
+	err = client.Disable(context.Background(), name, trogoneventstore.GenericProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Stopped")
@@ -57,9 +57,9 @@ func (s *ProjectionSuite) TestDeleteProjection() {
 	done := make(chan bool)
 	go func() {
 		for {
-			err = client.Delete(context.Background(), name, kurrentdb.DeleteProjectionOptions{})
-			if esdbErr, ok := kurrentdb.FromError(err); !ok {
-				if !esdbErr.IsErrorCode(kurrentdb.ErrorCodeUnknown) {
+			err = client.Delete(context.Background(), name, trogoneventstore.DeleteProjectionOptions{})
+			if esdbErr, ok := trogoneventstore.FromError(err); !ok {
+				if !esdbErr.IsErrorCode(trogoneventstore.ErrorCodeUnknown) {
 					s.T().Errorf("Delete error: %v", esdbErr)
 				}
 				time.Sleep(500 * time.Millisecond)
@@ -85,11 +85,11 @@ func (s *ProjectionSuite) TestUpdateProjection() {
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+	err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 	for i := 0; i < 100 && err != nil; i++ {
-		if esdbErr, ok := kurrentdb.FromError(err); ok && esdbErr.IsErrorCode(kurrentdb.ErrorCodeUnknown) {
+		if esdbErr, ok := trogoneventstore.FromError(err); ok && esdbErr.IsErrorCode(trogoneventstore.ErrorCodeUnknown) {
 			time.Sleep(1 * time.Second)
-			err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+			err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 		}
 	}
 	s.NoError(err)
@@ -99,54 +99,44 @@ func (s *ProjectionSuite) TestUpdateProjection() {
 	updatedScript, err := os.ReadFile("../resources/test/projection-updated.js")
 	s.NoError(err)
 
-	err = client.Update(context.Background(), name, string(updatedScript), kurrentdb.UpdateProjectionOptions{})
+	err = client.Update(context.Background(), name, string(updatedScript), trogoneventstore.UpdateProjectionOptions{})
 	s.NoError(err)
 
-	status, err := client.GetStatus(context.Background(), name, kurrentdb.GenericProjectionOptions{})
+	status, err := client.GetStatus(context.Background(), name, trogoneventstore.GenericProjectionOptions{})
 	s.NoError(err)
 	s.Equal(int64(1), status.Version)
 }
 
-const projectionMetadataMinVersion = "projection caller metadata requires KurrentDB 26.2.0 or later"
-
-func (s *ProjectionSuite) TestCreateProjectionWithMetadata() {
+func (s *ProjectionSuite) TestCreateProjectionWithAnnotations() {
 	fixture := s.fixture
-	fixture.RequireMinServerVersion(s.T(), 26, 2, 0, projectionMetadataMinVersion)
 	client := s.fixture.ProjectionClient()
 
 	script, err := os.ReadFile("../resources/test/projection.js")
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{
-		Metadata: map[string]interface{}{
+	err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{
+		Annotations: map[string]string{
 			"deploy":  "abc123",
 			"tool":    "gaffer",
-			"version": 42,
-			"labels":  []interface{}{"a", "b"},
+			"version": "42",
+			"labels":  "a,b",
 		},
 	})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
-
-	md := fixture.ProjectionDefinitionMetadata(s.T(), name)
-	s.Equal("abc123", md["deploy"])
-	s.Equal("gaffer", md["tool"])
-	s.Equal(float64(42), md["version"])
-	s.Equal([]interface{}{"a", "b"}, md["labels"])
 }
 
-func (s *ProjectionSuite) TestUpdateProjectionWithMetadata() {
+func (s *ProjectionSuite) TestUpdateProjectionWithAnnotations() {
 	fixture := s.fixture
-	fixture.RequireMinServerVersion(s.T(), 26, 2, 0, projectionMetadataMinVersion)
 	client := s.fixture.ProjectionClient()
 
 	script, err := os.ReadFile("../resources/test/projection.js")
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+	err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
@@ -154,57 +144,12 @@ func (s *ProjectionSuite) TestUpdateProjectionWithMetadata() {
 	updatedScript, err := os.ReadFile("../resources/test/projection-updated.js")
 	s.NoError(err)
 
-	err = client.Update(context.Background(), name, string(updatedScript), kurrentdb.UpdateProjectionOptions{
-		Metadata: map[string]interface{}{
+	err = client.Update(context.Background(), name, string(updatedScript), trogoneventstore.UpdateProjectionOptions{
+		Annotations: map[string]string{
 			"deploy": "def456",
 		},
 	})
 	s.NoError(err)
-
-	md := fixture.ProjectionDefinitionMetadata(s.T(), name)
-	s.Equal("def456", md["deploy"])
-}
-
-// A plain update with no metadata must not wipe metadata stamped at create
-// time. This is the behaviour deployment tooling relies on: annotate once, and
-// later script-only updates leave the annotation intact.
-func (s *ProjectionSuite) TestUpdateWithoutMetadataKeepsExistingMetadata() {
-	fixture := s.fixture
-	fixture.RequireMinServerVersion(s.T(), 26, 2, 0, projectionMetadataMinVersion)
-	client := s.fixture.ProjectionClient()
-
-	script, err := os.ReadFile("../resources/test/projection.js")
-	s.NoError(err)
-	name := fixture.NewProjectionName()
-
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{
-		Metadata: map[string]interface{}{"deploy": "abc123"},
-	})
-	s.NoError(err)
-
-	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
-
-	updatedScript, err := os.ReadFile("../resources/test/projection-updated.js")
-	s.NoError(err)
-
-	err = client.Update(context.Background(), name, string(updatedScript), kurrentdb.UpdateProjectionOptions{})
-	s.NoError(err)
-
-	md := fixture.ProjectionDefinitionMetadata(s.T(), name)
-	s.Equal("abc123", md["deploy"])
-}
-
-func (s *ProjectionSuite) TestCreateProjectionRejectsInvalidMetadata() {
-	fixture := s.fixture
-	client := s.fixture.ProjectionClient()
-	name := fixture.NewProjectionName()
-
-	err := client.Create(context.Background(), name, "fromAll().when({});", kurrentdb.CreateProjectionOptions{
-		Metadata: map[string]interface{}{
-			"bad": make(chan int),
-		},
-	})
-	s.ErrorContains(err, "invalid projection metadata value for \"bad\"")
 }
 
 func (s *ProjectionSuite) TestEnableProjection() {
@@ -215,12 +160,12 @@ func (s *ProjectionSuite) TestEnableProjection() {
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+	err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
 
-	err = client.Enable(context.Background(), name, kurrentdb.GenericProjectionOptions{})
+	err = client.Enable(context.Background(), name, trogoneventstore.GenericProjectionOptions{})
 	s.NoError(err)
 }
 
@@ -231,12 +176,12 @@ func (s *ProjectionSuite) TestDisableProjection() {
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+	err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
 
-	err = client.Abort(context.Background(), name, kurrentdb.GenericProjectionOptions{})
+	err = client.Abort(context.Background(), name, trogoneventstore.GenericProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Stopped")
@@ -249,12 +194,12 @@ func (s *ProjectionSuite) TestResetProjection() {
 	s.NoError(err)
 	name := fixture.NewProjectionName()
 
-	err = client.Create(context.Background(), name, string(script), kurrentdb.CreateProjectionOptions{})
+	err = client.Create(context.Background(), name, string(script), trogoneventstore.CreateProjectionOptions{})
 	s.NoError(err)
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
 
-	err = client.Reset(context.Background(), name, kurrentdb.ResetProjectionOptions{})
+	err = client.Reset(context.Background(), name, trogoneventstore.ResetProjectionOptions{})
 	s.NoError(err)
 }
 
@@ -264,47 +209,22 @@ func (s *ProjectionSuite) TestGetStateProjection() {
 
 	streamName := fixture.NewStreamId()
 	projName := fixture.NewProjectionName()
-	events := make([]kurrentdb.EventData, 10)
+	events := make([]trogoneventstore.EventData, 10)
 	for i := range events {
 		events[i] = fixture.CreateTestEvent()
 	}
 
-	_, err := client.Client().AppendToStream(context.Background(), streamName, kurrentdb.AppendToStreamOptions{}, events...)
+	_, err := client.Client().AppendToStream(context.Background(), streamName, trogoneventstore.AppendToStreamOptions{}, events...)
 	s.NoError(err)
 
 	script, err := os.ReadFile("../resources/test/projection.js")
 	s.NoError(err)
-	s.NoError(client.Create(context.Background(), projName, string(script), kurrentdb.CreateProjectionOptions{}))
+	s.NoError(client.Create(context.Background(), projName, string(script), trogoneventstore.CreateProjectionOptions{}))
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, projName, "Running")
-	s.NoError(client.Enable(context.Background(), projName, kurrentdb.GenericProjectionOptions{}))
+	s.NoError(client.Enable(context.Background(), projName, trogoneventstore.GenericProjectionOptions{}))
 
 	fixture.WaitUntilProjectionStateReady(s.T(), 5*time.Minute, projName)
-}
-
-func (s *ProjectionSuite) TestCreateProjectionV2Engine() {
-	fixture := s.fixture
-	client := s.fixture.ProjectionClient()
-	name := fixture.NewProjectionName()
-
-	err := client.Create(context.Background(), name, "fromAll().when({$init: function (state, ev) {return {};}});", kurrentdb.CreateProjectionOptions{
-		EngineVersion: kurrentdb.ProjectionEngineVersionV2,
-	})
-	s.NoError(err)
-
-	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, name, "Running")
-}
-
-func (s *ProjectionSuite) TestCreateProjectionV2EngineRejectsTrackEmittedStreams() {
-	fixture := s.fixture
-	client := s.fixture.ProjectionClient()
-	name := fixture.NewProjectionName()
-
-	err := client.Create(context.Background(), name, "fromAll().when({$init: function (state, ev) {return {};}});", kurrentdb.CreateProjectionOptions{
-		EngineVersion:       kurrentdb.ProjectionEngineVersionV2,
-		TrackEmittedStreams: true,
-	})
-	s.Error(err)
 }
 
 func (s *ProjectionSuite) TestGetResultProjection() {
@@ -313,20 +233,20 @@ func (s *ProjectionSuite) TestGetResultProjection() {
 
 	streamName := fixture.NewStreamId()
 	projName := fixture.NewProjectionName()
-	events := make([]kurrentdb.EventData, 10)
+	events := make([]trogoneventstore.EventData, 10)
 	for i := range events {
 		events[i] = fixture.CreateTestEvent()
 	}
 
-	_, err := client.Client().AppendToStream(context.Background(), streamName, kurrentdb.AppendToStreamOptions{}, events...)
+	_, err := client.Client().AppendToStream(context.Background(), streamName, trogoneventstore.AppendToStreamOptions{}, events...)
 	s.NoError(err)
 
 	script, err := os.ReadFile("../resources/test/projection.js")
 	s.NoError(err)
-	s.NoError(client.Create(context.Background(), projName, string(script), kurrentdb.CreateProjectionOptions{}))
+	s.NoError(client.Create(context.Background(), projName, string(script), trogoneventstore.CreateProjectionOptions{}))
 
 	fixture.WaitUntilProjectionStatusIs(s.T(), 5*time.Minute, projName, "Running")
-	s.NoError(client.Enable(context.Background(), projName, kurrentdb.GenericProjectionOptions{}))
+	s.NoError(client.Enable(context.Background(), projName, trogoneventstore.GenericProjectionOptions{}))
 
 	fixture.WaitUntilProjectionResultReady(s.T(), 5*time.Minute, projName)
 }

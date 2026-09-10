@@ -9,18 +9,18 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
 
 func Run() {
 	// region createClient
-	settings, err := kurrentdb.ParseConnectionString("{connectionString}")
+	settings, err := trogoneventstore.ParseConnectionString("{connectionString}")
 
 	if err != nil {
 		panic(err)
 	}
 
-	db, err := kurrentdb.NewClient(settings)
+	db, err := trogoneventstore.NewClient(settings)
 
 	// endregion createClient
 	if err != nil {
@@ -39,15 +39,15 @@ func Run() {
 		panic(err)
 	}
 
-	eventData := kurrentdb.EventData{
-		ContentType: kurrentdb.ContentTypeJson,
+	eventData := trogoneventstore.EventData{
+		ContentType: trogoneventstore.ContentTypeJson,
 		EventType:   "TestEvent",
 		Data:        data,
 	}
 	// endregion createEvent
 
 	// region appendEvents
-	_, err = db.AppendToStream(context.Background(), "some-stream", kurrentdb.AppendToStreamOptions{}, eventData)
+	_, err = db.AppendToStream(context.Background(), "some-stream", trogoneventstore.AppendToStreamOptions{}, eventData)
 	// endregion appendEvents
 
 	if err != nil {
@@ -55,7 +55,7 @@ func Run() {
 	}
 
 	// region readStream
-	stream, err := db.ReadStream(context.Background(), "some-stream", kurrentdb.ReadStreamOptions{}, 10)
+	stream, err := db.ReadStream(context.Background(), "some-stream", trogoneventstore.ReadStreamOptions{}, 10)
 
 	if err != nil {
 		panic(err)

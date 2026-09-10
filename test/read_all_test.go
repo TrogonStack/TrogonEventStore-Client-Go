@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
 
 func TestReadAllSuite(t *testing.T) {
@@ -31,9 +31,9 @@ func (s *ReadAllTestSuite) TestReadAllEventsForwardsFromZeroPosition() {
 
 	numberOfEvents := uint64(10)
 
-	opts := kurrentdb.ReadAllOptions{
-		Direction:      kurrentdb.Forwards,
-		From:           kurrentdb.Start{},
+	opts := trogoneventstore.ReadAllOptions{
+		Direction:      trogoneventstore.Forwards,
+		From:           trogoneventstore.Start{},
 		ResolveLinkTos: true,
 	}
 	stream, err := client.ReadAll(ctx, opts, numberOfEvents)
@@ -60,13 +60,13 @@ func (s *ReadAllTestSuite) TestReadAllEventsForwardsFromNonZeroPosition() {
 	defer cancel()
 
 	initialEvent := fixture.CreateTestEvent()
-	result, err := fixture.client.AppendToStream(ctx, streamId, kurrentdb.AppendToStreamOptions{}, initialEvent)
+	result, err := fixture.client.AppendToStream(ctx, streamId, trogoneventstore.AppendToStreamOptions{}, initialEvent)
 
 	fixture.CreateTestEvents(streamId, 1000)
 
 	s.NoError(err)
-	opts := kurrentdb.ReadAllOptions{
-		From:           kurrentdb.Position{Commit: result.CommitPosition, Prepare: result.PreparePosition},
+	opts := trogoneventstore.ReadAllOptions{
+		From:           trogoneventstore.Position{Commit: result.CommitPosition, Prepare: result.PreparePosition},
 		ResolveLinkTos: true,
 	}
 
@@ -94,9 +94,9 @@ func (s *ReadAllTestSuite) TestReadAllEventsBackwardsFromZeroPosition() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
 	defer cancel()
 
-	opts := kurrentdb.ReadAllOptions{
-		From:           kurrentdb.End{},
-		Direction:      kurrentdb.Backwards,
+	opts := trogoneventstore.ReadAllOptions{
+		From:           trogoneventstore.End{},
+		Direction:      trogoneventstore.Backwards,
 		ResolveLinkTos: true,
 	}
 
@@ -138,14 +138,14 @@ func (s *ReadAllTestSuite) TestReadAllEventsBackwardsFromNonZeroPosition() {
 	testEvents := fixture.CreateTestEvents(streamId, 1000)
 
 	initialEvent := fixture.CreateTestEvent()
-	result, err := fixture.client.AppendToStream(ctx, streamId, kurrentdb.AppendToStreamOptions{}, initialEvent)
+	result, err := fixture.client.AppendToStream(ctx, streamId, trogoneventstore.AppendToStreamOptions{}, initialEvent)
 	s.NoError(err)
 
 	fixture.CreateTestEvents(streamId, 10)
 
-	opts := kurrentdb.ReadAllOptions{
-		From:           kurrentdb.Position{Commit: result.CommitPosition, Prepare: result.PreparePosition},
-		Direction:      kurrentdb.Backwards,
+	opts := trogoneventstore.ReadAllOptions{
+		From:           trogoneventstore.Position{Commit: result.CommitPosition, Prepare: result.PreparePosition},
+		Direction:      trogoneventstore.Backwards,
 		ResolveLinkTos: true,
 	}
 
@@ -181,18 +181,18 @@ func (s *ReadAllTestSuite) TestReadAllEventsWithCredentialsOverride() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
 	defer cancel()
 
-	result, err := fixture.client.AppendToStream(ctx, streamId, kurrentdb.AppendToStreamOptions{}, fixture.CreateTestEvent())
+	result, err := fixture.client.AppendToStream(ctx, streamId, trogoneventstore.AppendToStreamOptions{}, fixture.CreateTestEvent())
 	s.NoError(err)
 
 	fixture.CreateTestEvents(streamId, 10)
 
-	opts := kurrentdb.ReadAllOptions{
-		Authenticated: &kurrentdb.Credentials{
+	opts := trogoneventstore.ReadAllOptions{
+		Authenticated: &trogoneventstore.Credentials{
 			Login:    "admin",
 			Password: "changeit",
 		},
-		From:           kurrentdb.Position{Commit: result.CommitPosition, Prepare: result.PreparePosition},
-		Direction:      kurrentdb.Forwards,
+		From:           trogoneventstore.Position{Commit: result.CommitPosition, Prepare: result.PreparePosition},
+		Direction:      trogoneventstore.Forwards,
 		ResolveLinkTos: false,
 	}
 

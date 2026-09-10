@@ -3,29 +3,22 @@ package test
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"io"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/structpb"
+	"github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore"
 )
-
-const projectionsStreamPrefix = "$projections-"
-const projectionUpdatedEventType = "$ProjectionUpdated"
 
 type ProjectFixture struct {
 	*ClientFixture
-	projectionClient *kurrentdb.ProjectionClient
+	projectionClient *trogoneventstore.ProjectionClient
 }
 
 func NewProjectFixture(t *testing.T, clientFixture *ClientFixture) *ProjectFixture {
 	t.Helper()
 
-	projectionClient := kurrentdb.NewProjectionClientFromExistingClient(clientFixture.Client())
+	projectionClient := trogoneventstore.NewProjectionClientFromExistingClient(clientFixture.Client())
 
 	return &ProjectFixture{
 		projectionClient: projectionClient,
@@ -42,7 +35,7 @@ func (f *ProjectFixture) WaitUntilProjectionStatusIs(t *testing.T, timeout time.
 		case <-ctx.Done():
 			t.Fatalf("Timeout waiting for status %s", targetStatus)
 		default:
-			status, err := f.projectionClient.GetStatus(context.Background(), name, kurrentdb.GenericProjectionOptions{})
+			status, err := f.projectionClient.GetStatus(context.Background(), name, trogoneventstore.GenericProjectionOptions{})
 			if err != nil {
 				t.Logf("Status check error: %v", err)
 				time.Sleep(1 * time.Second)
@@ -60,7 +53,7 @@ func (f *ProjectFixture) WaitUntilProjectionStateReady(t *testing.T, duration ti
 	done := make(chan *state)
 	go func() {
 		for {
-			result, err := f.projectionClient.GetState(context.Background(), name, kurrentdb.GetStateProjectionOptions{})
+			result, err := f.projectionClient.GetState(context.Background(), name, trogoneventstore.GetStateProjectionOptions{})
 
 			if err != nil {
 				time.Sleep(100 * time.Millisecond)
@@ -96,7 +89,7 @@ func (f *ProjectFixture) WaitUntilProjectionResultReady(t *testing.T, duration t
 	done := make(chan *state)
 	go func() {
 		for {
-			result, err := f.projectionClient.GetResult(context.Background(), name, kurrentdb.GetResultProjectionOptions{})
+			result, err := f.projectionClient.GetResult(context.Background(), name, trogoneventstore.GetResultProjectionOptions{})
 
 			if err != nil {
 				time.Sleep(100 * time.Millisecond)
@@ -125,44 +118,6 @@ func (f *ProjectFixture) WaitUntilProjectionResultReady(t *testing.T, duration t
 		return
 	case <-time.After(duration):
 		t.Errorf("unable to get projection '%s' internal state in a timely manner", name)
-	}
-}
-
-// ProjectionDefinitionMetadata reads the caller-supplied metadata stamped on
-// the most recent $ProjectionUpdated definition event for the named projection.
-// The server serializes it as a protobuf Struct on the event's metadata.
-func (f *ProjectFixture) ProjectionDefinitionMetadata(t *testing.T, name string) map[string]interface{} {
-	t.Helper()
-
-	stream, err := f.Client().ReadStream(context.Background(), projectionsStreamPrefix+name, kurrentdb.ReadStreamOptions{
-		Direction: kurrentdb.Backwards,
-		From:      kurrentdb.End{},
-	}, 100)
-	if err != nil {
-		t.Fatalf("error reading projection definition stream: %v", err)
-	}
-	defer stream.Close()
-
-	for {
-		event, err := stream.Recv()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			t.Fatalf("error receiving projection definition event: %v", err)
-		}
-
-		recorded := event.OriginalEvent()
-		if recorded.EventType != projectionUpdatedEventType || len(recorded.UserMetadata) == 0 {
-			continue
-		}
-
-		var s structpb.Struct
-		if err := proto.Unmarshal(recorded.UserMetadata, &s); err != nil {
-			t.Fatalf("error unmarshalling projection properties: %v", err)
-		}
-
-		return s.AsMap()
 	}
 }
 

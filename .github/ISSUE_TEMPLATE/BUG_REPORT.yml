@@ -44,15 +44,15 @@ body:
     attributes:
       label: Package version
       description: What version of the client you're experiencing the issue with.
-      placeholder: e.g., KurrentDB-Client-Go 1.1.2
+      placeholder: e.g., v0.1.0
     validations:
       required: true
   - type: input
-    id: kurrentdb-version
+    id: server-version
     attributes:
-      label: KurrentDB Version
+      label: TrogonEventStore version
       description: What version of the database you are using.
-      placeholder: e.g., KurrentDB v24.10
+      placeholder: e.g., v0.1.0
     validations:
       required: true
   - type: input
@@ -60,20 +60,19 @@ body:
     attributes:
       label: Connection string
       description: What connection string you're using. Hide and sensitive information if necessary.
-      placeholder: e.g., kurrentdb://admin:changeit@localhost:2113
+      placeholder: e.g., esdb://admin:changeit@localhost:2113
     validations:
       required: true
   - type: dropdown
     id: deployment-environment
     attributes:
       label: ☁️ Deployment Environment
-      description: How is KurrentDB deployed?
+      description: How is TrogonEventStore deployed?
       options:
         - Single-node (Docker)
         - Single-node (Bare metal/VM)
         - Multi-node cluster (On-prem)
         - Multi-node cluster (Cloud)
-        - Managed KurrentDB Cloud
         - Other (please specify below)
     validations:
       required: true

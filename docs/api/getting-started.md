@@ -4,8 +4,8 @@ order: 1
 
 # Getting started
 
-This guide will help you get started with KurrentDB in your Go application.
-It covers the basic steps to connect to KurrentDB, create events, append them
+This guide will help you get started with TrogonEventStore in your Go application.
+It covers the basic steps to connect to TrogonEventStore, create events, append them
 to streams, and read them back.
 
 ## Required packages
@@ -13,37 +13,37 @@ to streams, and read them back.
 Add the following dependencies to your `go.mod` file:
 
 ```bash
-go get http://github.com/kurrent-io/KurrentDB-Client-Go/kurrentdb
+go get github.com/TrogonStack/TrogonEventStore-Client-Go/trogoneventstore
 ```
 
-## Connecting to KurrentDB
+## Connecting to TrogonEventStore
 
-To connect your application to KurrentDB, you need to configure and create a client instance.
+To connect your application to TrogonEventStore, you need to configure and create a client instance.
 
 ::: tip Insecure clusters
-The recommended way to connect to KurrentDB is using secure mode (which is
-the default). However, if your KurrentDB instance is running in insecure
+The recommended way to connect to TrogonEventStore is using secure mode (which is
+the default). However, if your TrogonEventStore instance is running in insecure
 mode, you must explicitly set `tls=false` in your connection string or client configuration.
 :::
 
-KurrentDB uses connection strings to configure the client connection. The connection string supports two protocols:
+TrogonEventStore uses connection strings to configure the client connection. The connection string supports two protocols:
 
-- **`kurrentdb://`** - for connecting directly to specific node endpoints (single node or multi-node cluster with explicit endpoints)
-- **`kurrentdb+discover://`** - for connecting using cluster discovery via DNS or gossip endpoints
+- **`esdb://`** - for connecting directly to specific node endpoints (single node or multi-node cluster with explicit endpoints)
+- **`trogoneventstore+discover://`** - for connecting using cluster discovery via DNS or gossip endpoints
 
-When using `kurrentdb://`, you specify the exact endpoints to connect to. The client will connect directly to these endpoints. For multi-node clusters, you can specify multiple endpoints separated by commas, and the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference.
+When using `esdb://`, you specify the exact endpoints to connect to. The client will connect directly to these endpoints. For multi-node clusters, you can specify multiple endpoints separated by commas, and the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference.
 
-With `kurrentdb+discover://`, the client uses cluster discovery to find available nodes. This is particularly useful when you have a DNS A record pointing to cluster nodes or when you want the client to automatically discover the cluster topology.
+With `trogoneventstore+discover://`, the client uses cluster discovery to find available nodes. This is particularly useful when you have a DNS A record pointing to cluster nodes or when you want the client to automatically discover the cluster topology.
 
 ::: info Gossip support
-Since version 22.10, kurrentdb supports gossip on single-node deployments, so
-`kurrentdb+discover://` can be used for any topology, including single-node setups.
+Since version 22.10, trogoneventstore supports gossip on single-node deployments, so
+`trogoneventstore+discover://` can be used for any topology, including single-node setups.
 :::
 
 For cluster connections using discovery, use the following format:
 
 ```
-kurrentdb+discover://admin:changeit@cluster.dns.name:2113
+trogoneventstore+discover://admin:changeit@cluster.dns.name:2113
 ```
 
 Where `cluster.dns.name` is a DNS `A` record that points to all cluster nodes.
@@ -51,13 +51,13 @@ Where `cluster.dns.name` is a DNS `A` record that points to all cluster nodes.
 For direct connections to specific endpoints, you can specify individual nodes:
 
 ```
-kurrentdb://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
+esdb://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
 ```
 
 Or for a single node:
 
 ```
-kurrentdb://admin:changeit@localhost:2113
+esdb://admin:changeit@localhost:2113
 ```
 
 There are a number of query parameters that can be used in the connection string to instruct the cluster how and where the connection should be established. All query parameters are optional.
@@ -78,27 +78,27 @@ There are a number of query parameters that can be used in the connection string
 | `userCertFile`        | String, file path                                 | None     | User certificate file for X.509 authentication.                                                                                                |
 | `userKeyFile`         | String, file path                                 | None     | Key file for the user certificate used for X.509 authentication.                                                                               |
 
-When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `kurrentdb://localhost:2113?tls=false`. Note that usernames and passwords aren't provided there because insecure deployments don't support authentication and authorisation.
+When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `esdb://localhost:2113?tls=false`. Note that usernames and passwords aren't provided there because insecure deployments don't support authentication and authorisation.
 
 ## Creating a client
 
 First, create a client and get it connected to the database.
 
 ```go
-settings, err := kurrentdb.ParseConnectionString("kurrentdb://localhost:2113?tls=false")
+settings, err := trogoneventstore.ParseConnectionString("esdb://localhost:2113?tls=false")
 
 if err != nil {
   panic(err)
 }
 
-db, err := kurrentdb.NewClient(settings)
+db, err := trogoneventstore.NewClient(settings)
 ```
 
 The client instance can be used as a singleton across the whole application. It doesn't need to open or close the connection.
 
 ## Creating an event
 
-You can write anything to KurrentDB as events. The client needs a byte array as the event payload. Normally, you'd use a serialized object, and it's up to you to choose the serialization method.
+You can write anything to TrogonEventStore as events. The client needs a byte array as the event payload. Normally, you'd use a serialized object, and it's up to you to choose the serialization method.
 
 The code snippet below creates an event object instance, serializes it, and adds it as a payload to the `EventData` structure, which the client can then write to the database.
 
@@ -134,8 +134,8 @@ if err != nil {
   panic(err)
 }
 
-eventData := kurrentdb.EventData{
-  ContentType: kurrentdb.ContentTypeJson,
+eventData := trogoneventstore.EventData{
+  ContentType: trogoneventstore.ContentTypeJson,
   EventType:   "OrderCreated",
   Data:        data,
 }
@@ -148,7 +148,7 @@ Each event in the database has its own unique identifier (UUID). The database us
 In the snippet below, we append the event to the stream `orders`.
 
 ```go
-_, err = db.AppendToStream(context.Background(), "orders", kurrentdb.AppendToStreamOptions{}, eventData)
+_, err = db.AppendToStream(context.Background(), "orders", trogoneventstore.AppendToStreamOptions{}, eventData)
 ```
 
 Here we are appending events without checking if the stream exists or if the stream version matches the expected event version. See more advanced scenarios in [appending events documentation](./appending-events.md).
@@ -158,7 +158,7 @@ Here we are appending events without checking if the stream exists or if the str
 Finally, we can read events back from the `orders` stream.
 
 ```go
-stream, err := db.ReadStream(context.Background(), "orders", kurrentdb.ReadStreamOptions{}, 10)
+stream, err := db.ReadStream(context.Background(), "orders", trogoneventstore.ReadStreamOptions{}, 10)
 
 if err != nil {
   panic(err)

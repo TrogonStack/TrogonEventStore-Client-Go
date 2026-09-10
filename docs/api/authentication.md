@@ -11,7 +11,7 @@ X.509 certificates are digital certificates that use the X.509 public key infras
 
 ## Prerequisites
 
-1. KurrentDB 25.0 or greater, or EventStoreDB 24.10 or later.
+1. A TrogonEventStore deployment with OAuth support enabled.
 2. A valid X.509 certificate configured on the Database. See [configuration steps](@server/security/user-authentication.html#user-x-509-certificates) for more details.
 
 ## Connect using an x.509 certificate
@@ -32,11 +32,11 @@ The client supports the following parameters:
 To authenticate, include these two parameters in your connection string or constructor when initializing the client:
 
 ```go
-settings, err := kurrentdb.ParseConnectionString("kurrentdb://admin:changeit@{endpoint}?tls=true&userCertFile={pathToCaFile}&userKeyFile={pathToKeyFile}")
+settings, err := trogoneventstore.ParseConnectionString("esdb://admin:changeit@{endpoint}?tls=true&userCertFile={pathToCaFile}&userKeyFile={pathToKeyFile}")
 
 if err != nil {
     panic(err)
 }
 
-db, err := kurrentdb.NewClient(settings)
+db, err := trogoneventstore.NewClient(settings)
 ```

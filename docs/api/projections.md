@@ -5,20 +5,20 @@ title: Projections
 
 # Projection management
 
-The client provides a way to manage projections in KurrentDB. 
+The client provides a way to manage projections in TrogonEventStore.
 
 For a detailed explanation of projections, see the [server documentation](@server/features/projections/README.md).
 
 ## Create a client
 
 ```go
-conf, err := kurrentdb.ParseConnectionString(connectionString)
+conf, err := trogoneventstore.ParseConnectionString(connectionString)
 
 if err != nil {
   panic(err)
 }
 
-client, err := kurrentdb.NewProjectionClient(conf)
+client, err := trogoneventstore.NewProjectionClient(conf)
 ```
 
 ## Create a projection
@@ -46,7 +46,22 @@ fromAll()
 `
 
 name := fmt.Sprintf("countEvent_Create_%s", uuid.New())
-err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{})
+err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{})
+
+if err != nil {
+    panic(err)
+}
+```
+
+Caller-supplied annotations can be attached to a projection definition:
+
+```go
+err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{
+    Annotations: map[string]string{
+        "deployment": "blue",
+        "owner":      "inventory",
+    },
+})
 
 if err != nil {
     panic(err)
@@ -56,10 +71,10 @@ if err != nil {
 Trying to create projections with the same name will result in an error:
 
 ```go
-err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{})
+err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{})
 
-if esdbErr, ok := kurrentdb.FromError(err); !ok {
-    if esdbErr.IsErrorCode(kurrentdb.ErrorCodeUnknown) && strings.Contains(esdbErr.Err().Error(), "Conflict") {
+if esdbErr, ok := trogoneventstore.FromError(err); !ok {
+    if esdbErr.IsErrorCode(trogoneventstore.ErrorCodeUnknown) && strings.Contains(esdbErr.Err().Error(), "Conflict") {
         log.Printf("projection %s already exists", name)
         return
     }
@@ -71,7 +86,7 @@ if esdbErr, ok := kurrentdb.FromError(err); !ok {
 It is possible to restart the entire projection subsystem using the projections management client API. The user must be in the `$ops` or `$admin` group to perform this operation.
 
 ```go
-err := client.RestartSubsystem(context.Background(), kurrentdb.GenericProjectionOptions{})
+err := client.RestartSubsystem(context.Background(), trogoneventstore.GenericProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -85,7 +100,7 @@ start to process events even after restarting the server or the projection
 subsystem. You must have access to a projection to enable it, see the [ACL documentation](@server/security/user-authorization.md).
 
 ```go
-err := client.Enable(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+err := client.Enable(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -95,10 +110,10 @@ if err != nil {
 You can only enable an existing projection. When you try to enable a non-existing projection, you'll get an error:
 
  ```go
-err := client.Enable(context.Background(), "projection that doesn't exist", kurrentdb.GenericProjectionOptions{})
+err := client.Enable(context.Background(), "projection that doesn't exist", trogoneventstore.GenericProjectionOptions{})
 
-if esdbError, ok := kurrentdb.FromError(err); !ok {
-    if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+if esdbError, ok := trogoneventstore.FromError(err); !ok {
+    if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
         log.Printf("projection not found")
         return
     }
@@ -112,7 +127,7 @@ Once disabled, the projection will not process events even after restarting the 
 You must have access to a projection to disable it, see the [ACL documentation](@server/security/user-authorization.md).
 
 ```go
-err := client.Disable(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+err := client.Disable(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -122,10 +137,10 @@ if err != nil {
 You can only disable an existing projection. When you try to disable a non-existing projection, you'll get an error:
 
 ```go
-err := client.Disable(context.Background(), "projection that doesn't exist", kurrentdb.GenericProjectionOptions{})
+err := client.Disable(context.Background(), "projection that doesn't exist", trogoneventstore.GenericProjectionOptions{})
 
-if esdbError, ok := kurrentdb.FromError(err); !ok {
-    if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+if esdbError, ok := trogoneventstore.FromError(err); !ok {
+    if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
         log.Printf("projection not found")
         return
     }
@@ -135,7 +150,7 @@ if esdbError, ok := kurrentdb.FromError(err); !ok {
 ## Delete a projection
 
 ```go
-err := client.Delete(context.Background(), "$by_category", kurrentdb.DeleteProjectionOptions{})
+err := client.Delete(context.Background(), "$by_category", trogoneventstore.DeleteProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -147,7 +162,7 @@ if err != nil {
 Aborts a projection, this will not save the projection's checkpoint.
 
 ```go
-err := client.Abort(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+err := client.Abort(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -157,10 +172,10 @@ if err != nil {
 You can only abort an existing projection. When you try to abort a non-existing projection, you'll get an error:
 
 ```go
-err := client.Abort(context.Background(), "projection that doesn't exist", kurrentdb.GenericProjectionOptions{})
+err := client.Abort(context.Background(), "projection that doesn't exist", trogoneventstore.GenericProjectionOptions{})
 
-if esdbError, ok := kurrentdb.FromError(err); !ok {
-    if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+if esdbError, ok := trogoneventstore.FromError(err); !ok {
+    if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
         log.Printf("projection not found")
         return
     }
@@ -172,7 +187,7 @@ if esdbError, ok := kurrentdb.FromError(err); !ok {
 Resets a projection, which causes deleting the projection checkpoint. This will force the projection to start afresh and re-emit events. Streams that are written to from the projection will also be soft-deleted.
 
 ```go
-err := client.Reset(context.Background(), "$by_category", kurrentdb.ResetProjectionOptions{})
+err := client.Reset(context.Background(), "$by_category", trogoneventstore.ResetProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -182,10 +197,10 @@ if err != nil {
 Resetting a projection that does not exist will result in an error.
 
 ```go
-err := client.Reset(context.Background(), "projection that doesn't exist", kurrentdb.ResetProjectionOptions{})
+err := client.Reset(context.Background(), "projection that doesn't exist", trogoneventstore.ResetProjectionOptions{})
 
-if esdbError, ok := kurrentdb.FromError(err); !ok {
-    if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+if esdbError, ok := trogoneventstore.FromError(err); !ok {
+    if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
         log.Printf("projection not found")
         return
     }
@@ -197,13 +212,13 @@ if esdbError, ok := kurrentdb.FromError(err); !ok {
 Updates a projection with a given name. The query parameter contains the new JavaScript. Updating system projections using this operation is not supported at the moment.
 
 ```go
-err := client.Create(context.Background(), name, script, kurrentdb.CreateProjectionOptions{})
+err := client.Create(context.Background(), name, script, trogoneventstore.CreateProjectionOptions{})
 
 if err != nil {
     panic(err)
 }
 
-err = client.Update(context.Background(), name, newScript, kurrentdb.UpdateProjectionOptions{})
+err = client.Update(context.Background(), name, newScript, trogoneventstore.UpdateProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -213,10 +228,10 @@ if err != nil {
 You can only update an existing projection. When you try to update a non-existing projection, you'll get an error:
 
 ```go
-err := client.Update(context.Background(), "projection that doesn't exist", script, kurrentdb.UpdateProjectionOptions{})
+err := client.Update(context.Background(), "projection that doesn't exist", script, trogoneventstore.UpdateProjectionOptions{})
 
-if esdbError, ok := kurrentdb.FromError(err); !ok {
-    if esdbError.IsErrorCode(kurrentdb.ErrorCodeResourceNotFound) {
+if esdbError, ok := trogoneventstore.FromError(err); !ok {
+    if esdbError.IsErrorCode(trogoneventstore.ErrorCodeResourceNotFound) {
         log.Printf("projection not found")
         return
     }
@@ -229,7 +244,7 @@ Returns a list of all projections, user defined & system projections.
 See the [projection details](#projection-details) section for an explanation of the returned values.
 
 ```go
-projections, err := client.ListAll(context.Background(), kurrentdb.GenericProjectionOptions{})
+projections, err := client.ListAll(context.Background(), trogoneventstore.GenericProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -255,7 +270,7 @@ Returns a list of all continuous projections.
 See the [projection details](#projection-details) section for an explanation of the returned values.
 
 ```go
-projections, err := client.ListContinuous(context.Background(), kurrentdb.GenericProjectionOptions{})
+projections, err := client.ListContinuous(context.Background(), trogoneventstore.GenericProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -281,7 +296,7 @@ Gets the status of a named projection.
 See the [projection details](#projection-details) section for an explanation of the returned values.
 
 ```go
-projection, err := client.GetStatus(context.Background(), "$by_category", kurrentdb.GenericProjectionOptions{})
+projection, err := client.GetStatus(context.Background(), "$by_category", trogoneventstore.GenericProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -306,7 +321,7 @@ type Foobar struct {
     Count int64
 }
 
-value, err := client.GetState(context.Background(), projectionName, kurrentdb.GetStateProjectionOptions{})
+value, err := client.GetState(context.Background(), projectionName, trogoneventstore.GetStateProjectionOptions{})
 
 if err != nil {
     panic(err)
@@ -336,7 +351,7 @@ type Baz struct {
     Result int64
 }
 
-value, err := client.GetResult(context.Background(), projectionName, kurrentdb.GetResultProjectionOptions{})
+value, err := client.GetResult(context.Background(), projectionName, trogoneventstore.GetResultProjectionOptions{})
 
 if err != nil {
     panic(err)
